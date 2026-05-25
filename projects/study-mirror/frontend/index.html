@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学迹 LearnWitness</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        surface: { DEFAULT: '#1e293b', light: '#334155', lighter: '#475569' },
+        accent: { warm: '#d4a574', sage: '#8ba08c', rose: '#b47878' },
+        text: { primary: '#f1f5f9', secondary: '#94a3b8', muted: '#64748b' }
+      }
+    }
+  }
+}
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+* { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+body { background: linear-gradient(135deg, #0b1120 0%, #0f172a 40%, #1a1f35 100%); background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh; }
+body.has-wallpaper { background-image: var(--wallpaper-url); }
+body.has-wallpaper::before { content: ''; position: fixed; inset: 0; background: rgba(11,17,32,0.55); z-index: 0; pointer-events: none; }
+body.has-wallpaper > * { position: relative; z-index: 1; }
+.glass { background: rgba(30,41,59,0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); }
+.glass-light { background: rgba(51,65,85,0.5); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+.card-hover { transition: all 0.25s ease; }
+.card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+.ring-bg { stroke: rgba(255,255,255,0.08); fill: none; }
+.ring-fg { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.8s ease; }
+.btn-pulse { transition: all 0.15s ease; }
+.btn-pulse:active { transform: scale(0.96); }
+.priority-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.priority-high { background: #b47878; box-shadow: 0 0 8px rgba(180,120,120,0.4); }
+.priority-mid { background: #d4a574; box-shadow: 0 0 8px rgba(212,165,116,0.4); }
+.priority-low { background: #8ba08c; box-shadow: 0 0 8px rgba(139,160,140,0.4); }
+.ai-glow { box-shadow: 0 0 16px rgba(99,102,241,0.15); }
+.mood-btn { transition: all 0.2s ease; }
+.mood-btn.active { transform: scale(1.08); box-shadow: 0 0 20px rgba(212,165,116,0.35); border-color: #d4a574 !important; }
+.heat-cell { border-radius: 2px; transition: all 0.2s ease; }
+.heat-0 { background: rgba(255,255,255,0.04); }
+.heat-1 { background: rgba(212,165,116,0.25); }
+.heat-2 { background: rgba(212,165,116,0.55); }
+.heat-3 { background: rgba(212,165,116,0.8); }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+.task-scroll-area { max-height: 420px; overflow-y: auto; padding-right: 4px; }
+.task-scroll-area::-webkit-scrollbar { width: 4px; }
+.task-scroll-area::-webkit-scrollbar-track { background: transparent; }
+.task-scroll-area::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
+.task-scroll-area::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+.toast { animation: slideIn 0.3s ease, fadeOut 0.3s ease 2s forwards; }
+.timer-pulse { animation: timerPulse 2s ease-in-out infinite; }
+@keyframes timerPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+</style>
+</head>
+<body class="text-text-primary">
+
+<!-- Toast container -->
+<div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 hidden"></div>
+
+<!-- API Key Setup Modal -->
+<div id="apiModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden">
+  <div class="glass rounded-2xl p-8 w-full max-w-md mx-4">
+    <h2 class="text-xl font-bold mb-2">设置 DeepSeek API Key</h2>
+    <p class="text-text-secondary text-sm mb-4">AI任务排序和心情建议需要API Key。Key仅保存在浏览器本地，不会上传。</p>
+    <input id="apiKeyInput" type="password" class="w-full bg-surface rounded-xl px-4 py-3 text-sm border border-surface-lighter focus:border-accent-warm outline-none mb-3" placeholder="sk-...">
+    <div class="flex gap-3">
+      <button onclick="saveApiKey()" class="flex-1 bg-accent-warm hover:bg-accent-warm/70 text-white rounded-xl py-2.5 font-medium btn-pulse">保存并启用AI</button>
+      <button onclick="skipApiKey()" class="px-4 py-2.5 text-text-secondary hover:text-text-primary text-sm btn-pulse">跳过，用规则模式</button>
+    </div>
+    <p class="text-text-muted text-xs mt-3">获取 Key: <a href="https://platform.deepseek.com" target="_blank" class="text-accent-warm underline">platform.deepseek.com</a></p>
+  </div>
+</div>
+
+<!-- Main Layout -->
+<div class="flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 flex-shrink-0 glass border-r border-white/5 flex flex-col p-5">
+    <!-- Profile -->
+    <div class="flex items-center gap-3 mb-6">
+      <div id="sidebarAvatar" class="w-10 h-10 rounded-full bg-accent-warm flex items-center justify-center text-lg font-bold cursor-pointer hover:ring-2 hover:ring-accent-warm/50 transition-all" onclick="document.getElementById('avatarInput').click()" title="点击更换头像">
+        <span id="avatarEmoji">📚</span>
+      </div>
+      <input id="avatarInput" type="file" accept="image/*" class="hidden" onchange="changeAvatar(event)">
+      <div>
+        <div id="sidebarName" class="font-semibold text-sm cursor-pointer hover:text-accent-warm" onclick="editProfile()">学习者</div>
+        <div class="text-text-muted text-xs">终身学习者</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="space-y-2 mb-6">
+      <div class="glass-light rounded-xl p-3 flex items-center justify-between">
+        <span class="text-xs text-text-secondary">今日优先</span>
+        <span id="statPriority" class="text-sm font-bold text-accent-rose">0</span>
+      </div>
+      <div class="glass-light rounded-xl p-3 flex items-center justify-between">
+        <span class="text-xs text-text-secondary">阅读连续</span>
+        <span id="statStreak" class="text-sm font-bold text-accent-sage">0天</span>
+      </div>
+      <div class="glass-light rounded-xl p-3 flex items-center justify-between">
+        <span class="text-xs text-text-secondary">今日咖啡</span>
+        <span id="statCoffee" class="text-sm font-bold text-accent-warm">0杯</span>
+      </div>
+      <div class="glass-light rounded-xl p-3 flex items-center justify-between">
+        <span class="text-xs text-text-secondary">今日饮水</span>
+        <span id="statWater" class="text-sm font-bold text-accent-warm">0L</span>
+      </div>
+      <div class="glass-light rounded-xl p-3 flex items-center justify-between">
+        <span class="text-xs text-text-secondary">今日学习</span>
+        <span id="statWork" class="text-sm font-bold text-accent-warm">0min</span>
+      </div>
+    </div>
+
+    <!-- Statistics button -->
+    <button onclick="toggleStats()" class="w-full glass-light rounded-xl p-3 text-left hover:bg-surface-lighter/30 transition-all mb-4 btn-pulse">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-text-secondary">📊 统计分析</span>
+        <span class="text-text-muted text-xs">→</span>
+      </div>
+    </button>
+
+    <!-- Date -->
+    <div class="glass-light rounded-xl p-3 text-center mb-6">
+      <div id="currentDate" class="text-sm font-medium"></div>
+      <div class="text-text-muted text-xs mt-0.5">每天进步一点点</div>
+    </div>
+
+    <!-- AI Daily Summary -->
+    <button onclick="toggleDailySummary()" class="w-full glass-light rounded-xl p-3 text-left hover:bg-surface-lighter/30 transition-all mb-4 btn-pulse ai-glow">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-accent-warm font-medium">🤖 AI日报总结</span>
+        <span class="text-text-muted text-xs">→</span>
+      </div>
+    </button>
+
+    <!-- News Summary -->
+    <button onclick="toggleNewsSummary()" class="w-full glass-light rounded-xl p-3 text-left hover:bg-surface-lighter/30 transition-all mb-4 btn-pulse ai-glow">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-accent-warm font-medium">📰 今日资讯</span>
+        <span class="text-text-muted text-xs">→</span>
+      </div>
+    </button>
+
+    <!-- Settings -->
+    <div class="pt-4 border-t border-white/5 space-y-1">
+      <button onclick="exportData()" class="w-full text-left px-3 py-2 rounded-xl text-text-muted text-xs hover:bg-surface-light transition-colors">📤 导出数据</button>
+      <button onclick="document.getElementById('importFile').click()" class="w-full text-left px-3 py-2 rounded-xl text-text-muted text-xs hover:bg-surface-light transition-colors">📥 导入数据</button>
+      <input id="importFile" type="file" accept=".json" class="hidden" onchange="importData(event)">
+      <button onclick="document.getElementById('wallpaperInput').click()" class="w-full text-left px-3 py-2 rounded-xl text-text-muted text-xs hover:bg-surface-light transition-colors">🖼️ 更换壁纸</button>
+      <input id="wallpaperInput" type="file" accept="image/*" class="hidden" onchange="setWallpaper(event)">
+      <button id="removeWallpaperBtn" onclick="removeWallpaper()" class="w-full text-left px-3 py-2 rounded-xl text-text-muted text-xs hover:bg-surface-light transition-colors hidden">🚫 移除壁纸</button>
+      <button onclick="document.getElementById('apiModal').classList.remove('hidden')" class="w-full text-left px-3 py-2 rounded-xl text-text-muted text-xs hover:bg-surface-light transition-colors">🔑 设置API</button>
+      <button onclick="resetData()" class="w-full text-left px-3 py-2 rounded-xl text-text-muted text-xs hover:bg-surface-light transition-colors">🔄 重置数据</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 overflow-y-auto p-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold">学迹 LearnWitness</h1>
+        <p class="text-text-muted text-sm mt-0.5">学习打卡 · 任务管理 · 习惯追踪 · 数据分析</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="aiStatus" class="text-xs px-3 py-1 rounded-full bg-surface-light text-text-muted">⚪ 规则模式</span>
+      </div>
+    </div>
+
+    <!-- LEARNING CHECK-IN BANNER -->
+    <div class="glass rounded-2xl p-4 mb-4 card-hover">
+      <div class="flex items-center justify-between">
+        <!-- Status + Timer -->
+        <div class="flex items-center gap-4">
+          <div id="workStatusBadge" class="w-3 h-3 rounded-full bg-text-muted"></div>
+          <div>
+            <div id="workStatusLabel" class="text-sm font-semibold">未开始</div>
+            <div id="workTimer" class="text-2xl font-extrabold tabular-nums tracking-tight">00:00:00</div>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex items-center gap-2">
+          <button id="btnStartWork" onclick="startWork()" class="px-4 py-2 bg-accent-sage/20 hover:bg-accent-sage/30 border border-accent-sage/30 text-accent-sage rounded-xl text-sm font-medium btn-pulse transition-all">开始学习</button>
+          <button id="btnStartBreak" onclick="startBreak()" class="px-4 py-2 bg-accent-warm/20 hover:bg-accent-warm/30 border border-accent-warm/30 text-accent-warm rounded-xl text-sm font-medium btn-pulse transition-all hidden">休息一下</button>
+          <button id="btnResumeWork" onclick="resumeWork()" class="px-4 py-2 bg-accent-sage/20 hover:bg-accent-sage/30 border border-accent-sage/30 text-accent-sage rounded-xl text-sm font-medium btn-pulse transition-all hidden">继续学习</button>
+          <button id="btnEndWork" onclick="endWork()" class="px-4 py-2 bg-accent-rose/20 hover:bg-accent-rose/30 border border-accent-rose/30 text-accent-rose rounded-xl text-sm font-medium btn-pulse transition-all hidden">结束学习</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="flex gap-4 text-xs">
+          <div class="text-center"><div class="text-text-muted">工作</div><div id="statWorkMin" class="font-bold text-accent-sage">0min</div></div>
+          <div class="text-center"><div class="text-text-muted">休息</div><div id="statBreakMin" class="font-bold text-accent-warm">0min</div></div>
+        </div>
+      </div>
+
+      <!-- Expand sessions -->
+      <button id="toggleSessions" onclick="toggleWorkSessions()" class="w-full text-center text-xs text-text-muted hover:text-text-secondary mt-3 pt-3 border-t border-white/5 transition-colors hidden">
+        📋 今日时段记录 ▾
+      </button>
+      <div id="workSessionsPanel" class="hidden mt-2 space-y-1">
+        <div id="workSessionsList" class="text-xs text-text-secondary space-y-1 max-h-32 overflow-y-auto"></div>
+      </div>
+    </div>
+
+    <!-- BENTO GRID -->
+    <div class="grid grid-cols-3 gap-4">
+
+      <!-- ====== MODULE 1: TODAY'S PRIORITY (spans 2 cols) ====== -->
+      <div class="col-span-2 glass rounded-2xl p-5 card-hover">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold flex items-center gap-2">📋 今日优先 <span id="priorityBadge" class="text-xs px-2 py-0.5 rounded-full bg-accent-rose/20 text-accent-rose">0个待办</span></h2>
+          <button onclick="openTaskModal()" class="bg-accent-warm hover:bg-accent-warm/70 text-white text-sm px-4 py-2 rounded-xl btn-pulse font-medium">+ 添加任务</button>
+        </div>
+
+        <!-- AI Sort button -->
+        <div id="aiSortArea" class="mb-4 hidden">
+          <button onclick="aiSortTasks()" class="ai-glow w-full glass-light rounded-xl px-4 py-3 text-sm text-accent-warm hover:bg-surface-lighter/30 transition-all btn-pulse flex items-center justify-center gap-2">
+            🤖 AI分析并排序任务优先级
+          </button>
+        </div>
+
+        <!-- Task cards (scrollable when > 5) -->
+        <div id="taskScrollWrapper" class="task-scroll-area" onwheel="handleTaskScroll(event)">
+          <div id="taskList" class="space-y-3">
+            <p class="text-text-muted text-sm text-center py-8">还没有任务，点击右上角「添加任务」开始规划今天</p>
+          </div>
+        </div>
+
+        <!-- Completed section -->
+        <div id="completedSection" class="mt-4 pt-4 border-t border-white/5 hidden">
+          <button onclick="toggleCompleted()" class="text-text-muted text-xs hover:text-text-secondary transition-colors">
+            ✅ 今日已完成 (<span id="completedCount">0</span>) ▾
+          </button>
+          <div id="completedList" class="mt-2 space-y-2 hidden"></div>
+          <button id="historyToggleBtn" onclick="toggleHistory()" class="text-text-muted text-xs hover:text-text-secondary transition-colors mt-2" style="display:none">
+            📋 历史已完成 (<span id="historyCount">0</span>) ▾
+          </button>
+          <div id="historyList" class="mt-2 space-y-3 hidden"></div>
+        </div>
+      </div>
+
+      <!-- ====== MODULE 2: MOOD CHECK-IN (1 col, right) ====== -->
+      <div class="glass rounded-2xl p-5 card-hover">
+        <h2 class="text-lg font-bold mb-4">😊 今日心情</h2>
+        <p class="text-text-secondary text-sm mb-3">今天感觉怎么样？</p>
+        <div class="grid grid-cols-3 gap-2 mb-4">
+          <button onclick="setMood('energetic')" id="mood-energetic" class="mood-btn glass-light rounded-xl p-3 text-center border-2 border-transparent" data-mood="energetic">
+            <div class="text-2xl mb-1">😊</div>
+            <div class="text-xs text-text-secondary">精力充沛</div>
+          </button>
+          <button onclick="setMood('neutral')" id="mood-neutral" class="mood-btn glass-light rounded-xl p-3 text-center border-2 border-transparent" data-mood="neutral">
+            <div class="text-2xl mb-1">😐</div>
+            <div class="text-xs text-text-secondary">一般般</div>
+          </button>
+          <button onclick="setMood('low')" id="mood-low" class="mood-btn glass-light rounded-xl p-3 text-center border-2 border-transparent" data-mood="low">
+            <div class="text-2xl mb-1">😫</div>
+            <div class="text-xs text-text-secondary">提不起劲</div>
+          </button>
+        </div>
+
+        <!-- AI Nudge -->
+        <div id="aiNudge" class="glass-light rounded-xl p-4 ai-glow">
+          <div class="flex items-start gap-2">
+            <span class="text-lg">🤖</span>
+            <div>
+              <p class="text-xs text-text-muted mb-1">AI教练建议</p>
+              <p id="nudgeText" class="text-sm text-text-secondary leading-relaxed">先告诉我你今天的状态，我帮你找到最好的开始方式。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly mood trend -->
+        <div id="moodTrend" class="mt-4">
+          <p class="text-xs text-text-muted mb-2">近7天心情趋势</p>
+          <div id="moodTrendRow" class="flex gap-1 justify-center text-lg"></div>
+        </div>
+      </div>
+
+      <!-- ====== MODULE 3: READING HABIT (2 cols) ====== -->
+      <div class="col-span-2 glass rounded-2xl p-5 card-hover flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-bold">📖 阅读习惯</h2>
+          <div class="flex items-center gap-3 text-xs text-text-secondary">
+            <span>最长连续 <span id="longestStreak" class="font-semibold text-text-primary">0</span> 天</span>
+            <span class="text-text-muted">|</span>
+            <span>本月 <span id="monthlyRead" class="font-semibold text-text-primary">0</span>/<span id="monthlyDays">30</span> 天</span>
+          </div>
+        </div>
+        <!-- Check-in row -->
+        <div class="flex items-center gap-3 mb-3">
+          <div class="relative w-10 h-10 flex-shrink-0">
+            <svg class="w-10 h-10 -rotate-90" viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="38" stroke-width="7"/>
+              <circle id="streakRing" class="ring-fg" cx="50" cy="50" r="38" stroke-width="7" stroke="#8ba08c" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span id="streakCount" class="text-xs font-extrabold">0</span>
+            </div>
+          </div>
+          <button id="readingCheckin" onclick="checkInReading()" class="flex-1 bg-accent-sage/20 hover:bg-accent-sage/30 border border-accent-sage/30 text-accent-sage rounded-xl py-2 px-3 font-medium btn-pulse transition-all text-sm">
+            ✅ 今天阅读了吗？点击打卡
+          </button>
+        </div>
+        <!-- Heatmap — constrained within remaining space -->
+        <div class="flex-1 flex flex-col min-h-0">
+          <p class="text-xs text-text-muted mb-1 flex-shrink-0">过去12周</p>
+          <div id="heatmap" class="min-h-0 w-full grid grid-cols-7 gap-px" style="grid-auto-rows:1fr;height:100%"></div>
+        </div>
+      </div>
+
+      <!-- ====== MODULE 4: LIFE TRACKER (1 col, right) ====== -->
+      <div class="glass rounded-2xl p-5 card-hover">
+        <h2 class="text-lg font-bold mb-4">☕💧 生活记录</h2>
+
+        <!-- Tabs -->
+        <div class="flex mb-4 bg-surface rounded-xl p-1">
+          <button onclick="switchTrackerTab('coffee')" id="tab-coffee" class="flex-1 text-sm py-1.5 rounded-lg bg-accent-warm/20 text-accent-warm font-medium btn-pulse transition-all">☕ 咖啡</button>
+          <button onclick="switchTrackerTab('water')" id="tab-water" class="flex-1 text-sm py-1.5 rounded-lg text-text-secondary btn-pulse transition-all">💧 饮水</button>
+        </div>
+
+        <!-- Coffee tab -->
+        <div id="coffeePanel">
+          <!-- Mini ring -->
+          <div class="flex justify-center mb-3">
+            <div class="relative w-20 h-20">
+              <svg class="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
+                <circle class="ring-bg" cx="50" cy="50" r="38" stroke-width="6"/>
+                <circle id="coffeeRing" class="ring-fg" cx="50" cy="50" r="38" stroke-width="6" stroke="#d4a574" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span id="coffeeCups" class="text-lg font-bold">0</span>
+                <span class="text-xs text-text-muted">杯</span>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-text-muted text-center mb-3"><span id="coffeeMg">0</span>mg / 日限400mg</p>
+
+          <div class="space-y-2 mb-3">
+            <select id="coffeeBrand" class="w-full bg-surface rounded-xl px-3 py-2 text-sm border border-surface-lighter outline-none text-text-secondary" onchange="updateCoffeeType()">
+              <option value="星巴克">星巴克</option><option value="瑞幸">瑞幸</option><option value="库迪">库迪</option>
+              <option value="Manner">Manner</option><option value="雀巢">雀巢</option><option value="Tims">Tims</option>
+              <option value="便利店">便利店</option><option value="其他">其他</option>
+            </select>
+            <select id="coffeeType" class="w-full bg-surface rounded-xl px-3 py-2 text-sm border border-surface-lighter outline-none text-text-secondary" onchange="updateCoffeeMg()">
+              <option value="美式">美式</option><option value="奶咖">奶咖</option><option value="手冲">手冲</option>
+            </select>
+            <div class="flex items-center gap-2">
+              <input id="coffeeMgInput" type="number" value="150" class="w-20 bg-surface rounded-xl px-3 py-2 text-sm border border-surface-lighter outline-none text-text-secondary" onchange="syncCoffeeMg()">
+              <span class="text-xs text-text-muted">mg</span>
+              <button onclick="addCoffee()" class="flex-1 bg-accent-warm/20 hover:bg-accent-warm/30 text-accent-warm text-sm py-2 rounded-xl font-medium btn-pulse">记录这杯 ☕</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Water tab -->
+        <div id="waterPanel" class="hidden">
+          <div class="flex justify-center mb-3">
+            <div class="relative w-20 h-20">
+              <svg class="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
+                <circle class="ring-bg" cx="50" cy="50" r="38" stroke-width="6"/>
+                <circle id="waterRing" class="ring-fg" cx="50" cy="50" r="38" stroke-width="6" stroke="#38bdf8" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span id="waterLiters" class="text-lg font-bold">0</span>
+                <span class="text-xs text-text-muted">升</span>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-text-muted text-center mb-3">距目标 <span id="waterRemain">2.0</span>L</p>
+          <div class="flex flex-wrap gap-2 mb-3">
+            <button onclick="addWater(100)" class="px-3 py-1.5 text-xs rounded-xl border border-surface-lighter text-text-secondary hover:bg-surface-light btn-pulse">100ml</button>
+            <button onclick="addWater(200)" class="px-3 py-1.5 text-xs rounded-xl border border-surface-lighter text-text-secondary hover:bg-surface-light btn-pulse">200ml</button>
+            <button onclick="addWater(250)" class="px-3 py-1.5 text-xs rounded-xl border border-surface-lighter text-text-secondary hover:bg-surface-light btn-pulse">250ml</button>
+            <button onclick="addWater(500)" class="px-3 py-1.5 text-xs rounded-xl border border-surface-lighter text-text-secondary hover:bg-surface-light btn-pulse">500ml</button>
+            <input id="waterCustom" type="number" placeholder="自定义" class="w-20 bg-surface rounded-xl px-2 py-1.5 text-xs border border-surface-lighter outline-none text-text-secondary">
+            <button onclick="addWater(parseInt(document.getElementById('waterCustom').value)||0)" class="px-3 py-1.5 text-xs rounded-xl bg-blue-500/20 text-accent-warm hover:bg-blue-500/30 btn-pulse">+</button>
+          </div>
+        </div>
+
+        <!-- Today's log -->
+        <div class="border-t border-white/5 pt-3">
+          <p class="text-xs text-text-muted mb-2">📋 今日记录</p>
+          <div id="todayLog" class="text-xs text-text-secondary space-y-1 max-h-24 overflow-y-auto">
+            <p class="text-text-muted">暂无记录</p>
+          </div>
+        </div>
+      </div>
+    </div><!-- end bento grid -->
+
+    <!-- Statistics inline section -->
+    <div id="statsPanel" class="glass rounded-2xl p-6 card-hover mt-4 hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">📊 统计分析</h3>
+        <button onclick="toggleStats()" class="text-text-muted hover:text-text-primary text-xl btn-pulse">&times;</button>
+      </div>
+      <div class="flex gap-2 mb-4">
+        <button onclick="switchStatsPeriod('week')" id="statsPeriodWeek" class="px-4 py-1.5 rounded-xl text-sm font-medium bg-accent-warm/20 text-accent-warm btn-pulse">本周</button>
+        <button onclick="switchStatsPeriod('month')" id="statsPeriodMonth" class="px-4 py-1.5 rounded-xl text-sm text-text-secondary hover:bg-surface-light btn-pulse">本月</button>
+        <button onclick="switchStatsPeriod('year')" id="statsPeriodYear" class="px-4 py-1.5 rounded-xl text-sm text-text-secondary hover:bg-surface-light btn-pulse">本年</button>
+      </div>
+      <p id="statsDateRange" class="text-xs text-text-muted mb-4"></p>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="glass-light rounded-xl p-4">
+          <h4 class="text-sm font-semibold mb-3">🟢 每日工作时长</h4>
+          <div id="workChart" class="flex items-end gap-1 h-32"></div>
+          <div class="flex justify-between text-xs text-text-muted mt-2" id="workChartLabels"></div>
+        </div>
+        <div class="glass-light rounded-xl p-4">
+          <h4 class="text-sm font-semibold mb-3">🟡 每日休息时长</h4>
+          <div id="breakChart" class="flex items-end gap-1 h-32"></div>
+          <div class="flex justify-between text-xs text-text-muted mt-2" id="breakChartLabels"></div>
+        </div>
+        <div class="glass-light rounded-xl p-4">
+          <h4 class="text-sm font-semibold mb-3">📖 阅读记录</h4>
+          <div id="readingChart" class="flex items-end gap-1 h-24"></div>
+          <div class="flex justify-between text-xs text-text-muted mt-2" id="readingChartLabels"></div>
+        </div>
+        <div class="glass-light rounded-xl p-4">
+          <h4 class="text-sm font-semibold mb-3">☕💧 咖啡与饮水</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div><p class="text-xs text-text-muted mb-1">总咖啡因摄入</p><p id="statsTotalCaffeine" class="text-xl font-bold text-accent-warm">0mg</p></div>
+            <div><p class="text-xs text-text-muted mb-1">总饮水量</p><p id="statsTotalWater" class="text-xl font-bold text-accent-warm">0L</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="glass-light rounded-xl p-4 mt-4">
+        <h4 class="text-sm font-semibold mb-3">📋 周期汇总</h4>
+        <div class="grid grid-cols-5 gap-2 text-center">
+          <div><div class="text-xs text-text-muted">总工作</div><div id="statsSumWork" class="font-bold text-accent-sage text-sm">0h</div></div>
+          <div><div class="text-xs text-text-muted">总休息</div><div id="statsSumBreak" class="font-bold text-accent-warm text-sm">0h</div></div>
+          <div><div class="text-xs text-text-muted">阅读</div><div id="statsSumReading" class="font-bold text-accent-warm text-sm">0天</div></div>
+          <div><div class="text-xs text-text-muted">咖啡</div><div id="statsSumCoffee" class="font-bold text-accent-warm text-sm">0杯</div></div>
+          <div><div class="text-xs text-text-muted">饮水</div><div id="statsSumWater" class="font-bold text-accent-warm text-sm">0L</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Daily Summary inline section -->
+    <div id="dailySummaryPanel" class="glass rounded-2xl p-6 card-hover mt-4 hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">🤖 AI日报总结</h3>
+        <button onclick="toggleDailySummary()" class="text-text-muted hover:text-text-primary text-xl btn-pulse">&times;</button>
+      </div>
+      <p class="text-xs text-text-muted mb-4">基于今日所有数据，AI为你生成个性化总结和建议</p>
+      <div class="glass-light rounded-xl p-5 ai-glow">
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">🤖</span>
+          <div class="flex-1"><p id="dailySummaryText" class="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">点击下方按钮，生成今日总结...</p></div>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button onclick="generateDailySummary()" id="btnGenSummary" class="flex-1 bg-accent-warm/20 hover:bg-accent-warm/30 border border-accent-warm/30 text-accent-warm py-2.5 rounded-xl font-medium btn-pulse text-sm">✨ 生成今日总结</button>
+      </div>
+    </div>
+
+    <!-- News Summary Panel -->
+    <div id="newsSummaryPanel" class="glass rounded-2xl p-6 card-hover mt-4 hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">📰 今日资讯</h3>
+        <button onclick="toggleNewsSummary()" class="text-text-muted hover:text-text-primary text-xl btn-pulse">&times;</button>
+      </div>
+      <p class="text-xs text-text-muted mb-4">从 Hacker News 获取今日头条，AI 为你生成中文科技新闻简报</p>
+      <div class="glass-light rounded-xl p-5 ai-glow">
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">📰</span>
+          <div class="flex-1"><p id="newsSummaryText" class="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">点击下方按钮，获取今日科技资讯...</p></div>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button onclick="generateNewsSummary()" id="btnGenNews" class="flex-1 bg-accent-warm/20 hover:bg-accent-warm/30 border border-accent-warm/30 text-accent-warm py-2.5 rounded-xl font-medium btn-pulse text-sm">📰 获取今日资讯</button>
+      </div>
+    </div>
+
+  </main>
+<div id="taskModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden">
+  <div class="glass rounded-2xl p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-bold mb-4">添加新任务</h3>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-text-muted block mb-1">任务名称</label>
+        <input id="taskName" class="w-full bg-surface rounded-xl px-4 py-2.5 text-sm border border-surface-lighter focus:border-accent-warm outline-none" placeholder="例如：完成论文Introduction">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-text-muted block mb-1">截止日期</label>
+          <input id="taskDeadline" type="date" class="w-full bg-surface rounded-xl px-3 py-2.5 text-sm border border-surface-lighter focus:border-accent-warm outline-none">
+        </div>
+        <div>
+          <label class="text-xs text-text-muted block mb-1">预估时长</label>
+          <select id="taskDuration" class="w-full bg-surface rounded-xl px-3 py-2.5 text-sm border border-surface-lighter outline-none">
+            <option value="0.5">0.5小时</option><option value="1">1小时</option><option value="1.5" selected>1.5小时</option>
+            <option value="2">2小时</option><option value="3">3小时</option><option value="4">4小时</option><option value="6">6小时</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-text-muted block mb-1">重要性</label>
+        <div class="flex gap-2" id="starSelector">
+          <button onclick="setStars(1)" class="star-btn text-2xl text-text-muted hover:text-accent-warm btn-pulse">★</button>
+          <button onclick="setStars(2)" class="star-btn text-2xl text-text-muted hover:text-accent-warm btn-pulse">★</button>
+          <button onclick="setStars(3)" class="star-btn text-2xl text-text-muted hover:text-accent-warm btn-pulse">★</button>
+          <button onclick="setStars(4)" class="star-btn text-2xl text-text-muted hover:text-accent-warm btn-pulse">★</button>
+          <button onclick="setStars(5)" class="star-btn text-2xl text-text-muted hover:text-accent-warm btn-pulse">★</button>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="closeTaskModal()" class="flex-1 py-2.5 rounded-xl border border-surface-lighter text-text-secondary hover:bg-surface-light btn-pulse text-sm">取消</button>
+      <button onclick="addTask()" class="flex-1 bg-accent-warm hover:bg-accent-warm/70 text-white py-2.5 rounded-xl font-medium btn-pulse text-sm">添加任务</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div id="taskModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden">
+  <div class="glass rounded-2xl p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-bold mb-4">添加新任务</h3>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-text-muted block mb-1">任务名称</label>
+        <input id="taskName" class="w-full bg-surface rounded-xl px-4 py-2.5 text-sm border border-surface-lighter focus:border-accent-warm outline-none" placeholder="例如：完成论文Introduction">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-text-muted block mb-1">截止日期</label>
+          <input id="taskDeadline" type="date" class="w-full bg-surface rounded-xl px-3 py-2.5 text-sm border border-surface-lighter focus:border-accent-warm outline-none">
+        </div>
+        <div>
+          <label class="text-xs text-text-muted block mb-1">预估时长</label>
+          <select id="taskDuration" class="w-full bg-surface rounded-xl px-3 py-2.5 text-sm border border-surface-lighter outline-none">
+            <option value="0.5">0.5小时</option><option value="1">1小时</option><option value="1.5" selected>1.5小时</option>
+            <option value="2">2小时</option><option value="3">3小时</option><option value="4">4小时</option><option value="6">6小时</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-text-muted block mb-1">重要性</label>
+        <div class="flex gap-2" id="starSelector">
+          <button onclick="setStars(1)" class="star-btn text-2xl text-text-muted hover:text-accent-warm btn-pulse">★</button>
+          <button onclick="setStars(2)" class="star-btn text-2xl text-text-muted hover:text-accent-warm btn-pulse">★</button>
+          <button onclick="setStars(3)" class="star-btn text-2xl text-text-muted hover:text-accent-warm btn-pulse">★</button>
+          <button onclick="setStars(4)" class="star-btn text-2xl text-text-muted hover:text-accent-warm btn-pulse">★</button>
+          <button onclick="setStars(5)" class="star-btn text-2xl text-text-muted hover:text-accent-warm btn-pulse">★</button>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="closeTaskModal()" class="flex-1 py-2.5 rounded-xl border border-surface-lighter text-text-secondary hover:bg-surface-light btn-pulse text-sm">取消</button>
+      <button onclick="addTask()" class="flex-1 bg-accent-warm hover:bg-accent-warm/70 text-white py-2.5 rounded-xl font-medium btn-pulse text-sm">添加任务</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== DATA STORE ======
+const DEFAULTS = {
+  tasks: [],
+  readingDays: {},
+  moodHistory: {},
+  coffeeLog: {},
+  waterLog: {},
+  workSessions: {},
+  profile: { name: '学习者', id: '终身学习者', avatar: '📚' },
+  wallpaper: '',
+  apiKey: ''
+};
+const COFFEE_DB = {
+  '星巴克': { '美式': 150, '奶咖': 75, '手冲': 170 },
+  '瑞幸': { '美式': 120, '奶咖': 70, '手冲': 140 },
+  '库迪': { '美式': 110, '奶咖': 65, '手冲': 130 },
+  'Manner': { '美式': 120, '奶咖': 70, '手冲': 140 },
+  '雀巢': { '美式': 60, '奶咖': 50, '手冲': 100 },
+  'Tims': { '美式': 140, '奶咖': 80, '手冲': 160 },
+  '便利店': { '美式': 100, '奶咖': 60, '手冲': 100 },
+  '其他': { '美式': 100, '奶咖': 80, '手冲': 120 }
+};
+
+function load(key) {
+  try { const v = localStorage.getItem('lw_'+key); return v ? JSON.parse(v) : DEFAULTS[key]; }
+  catch { return DEFAULTS[key]; }
+}
+function save(key, val) { localStorage.setItem('lw_'+key, JSON.stringify(val)); }
+
+let state = {
+  tasks: load('tasks'),
+  readingDays: load('readingDays'),
+  moodHistory: load('moodHistory'),
+  coffeeLog: load('coffeeLog'),
+  waterLog: load('waterLog'),
+  workSessions: load('workSessions'),
+  profile: load('profile'),
+  wallpaper: load('wallpaper'),
+  apiKey: load('apiKey'),
+  taskStars: 3,
+  trackerTab: 'coffee',
+  workTimerInterval: null,
+  workTimerSeconds: 0,
+  workStatus: 'idle'
+};
+
+function getToday() { return new Date().toISOString().slice(0,10); }
+function formatDate(d) { const dd = new Date(d); return `${dd.getMonth()+1}月${dd.getDate()}日`; }
+
+// ====== PERSIST ======
+function persist() {
+  save('tasks', state.tasks);
+  save('readingDays', state.readingDays);
+  save('moodHistory', state.moodHistory);
+  save('coffeeLog', state.coffeeLog);
+  save('waterLog', state.waterLog);
+  save('workSessions', state.workSessions);
+  save('profile', state.profile);
+  save('wallpaper', state.wallpaper);
+  save('apiKey', state.apiKey);
+}
+
+// ====== TOAST ======
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 z-50 toast glass px-5 py-3 rounded-xl text-sm font-medium';
+  t.style.animation = 'none'; t.offsetHeight;
+  t.style.animation = 'slideIn 0.3s ease, fadeOut 0.3s ease 2s forwards';
+}
+
+// ====== API KEY ======
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) { toast('请输入 API Key'); return; }
+  state.apiKey = key;
+  persist();
+  document.getElementById('apiModal').classList.add('hidden');
+  document.getElementById('aiStatus').innerHTML = '🟢 AI模式';
+  document.getElementById('aiStatus').className = 'text-xs px-3 py-1 rounded-full bg-accent-sage/20 text-accent-sage';
+  document.getElementById('aiSortArea').classList.remove('hidden');
+  toast('API Key 已保存，AI功能已启用 ✨');
+}
+function skipApiKey() {
+  state.apiKey = '';
+  persist();
+  document.getElementById('apiModal').classList.add('hidden');
+  toast('使用规则模式，任务将按DDL和重要性自动排序');
+}
+
+// ====== INIT ======
+function init() {
+  // API Key check
+  if (state.apiKey) {
+    document.getElementById('aiStatus').innerHTML = '🟢 AI模式';
+    document.getElementById('aiStatus').className = 'text-xs px-3 py-1 rounded-full bg-accent-sage/20 text-accent-sage';
+    document.getElementById('aiSortArea').classList.remove('hidden');
+  } else {
+    document.getElementById('apiModal').classList.remove('hidden');
+  }
+
+  // Restore work timer if was active
+  const today = getToday();
+  const todaySessions = state.workSessions[today];
+  if (todaySessions) {
+    const lastSession = todaySessions.sessions[todaySessions.sessions.length - 1];
+    const lastBreak = todaySessions.breaks[todaySessions.breaks.length - 1];
+    if (lastSession && !lastSession.end) {
+      state.workStatus = 'working';
+      state.workTimerSeconds = Math.floor((new Date() - new Date(lastSession.start)) / 1000);
+      startTimer();
+    } else if (lastBreak && !lastBreak.end) {
+      state.workStatus = 'break';
+      state.workTimerSeconds = Math.floor((new Date() - new Date(lastBreak.start)) / 1000);
+      startTimer();
+    }
+  }
+
+  // Date
+  const now = new Date();
+  document.getElementById('currentDate').textContent = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 周${'日一二三四五六'[now.getDay()]}`;
+
+  // Restore wallpaper
+  if (state.wallpaper) {
+    applyWallpaper(state.wallpaper);
+  } else {
+    document.getElementById('removeWallpaperBtn').classList.add('hidden');
+  }
+
+  // Profile
+  updateSidebarProfile();
+  renderAll();
+}
+
+// ====== PROFILE ======
+function updateSidebarProfile() {
+  document.getElementById('sidebarName').textContent = state.profile.name;
+  document.getElementById('avatarEmoji').textContent = state.profile.avatar || '🎓';
+}
+function editProfile() {
+  const name = prompt('输入姓名：', state.profile.name);
+  if (name) { state.profile.name = name; persist(); updateSidebarProfile(); }
+}
+function changeAvatar(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    state.profile.avatar = ev.target.result;
+    document.getElementById('avatarEmoji').innerHTML = `<img src="${ev.target.result}" class="w-10 h-10 rounded-full object-cover">`;
+    persist();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ====== TASK MANAGEMENT ======
+function openTaskModal() {
+  document.getElementById('taskModal').classList.remove('hidden');
+  document.getElementById('taskName').value = '';
+  document.getElementById('taskDeadline').value = '';
+  document.getElementById('taskDuration').value = '1.5';
+  state.taskStars = 3;
+  updateStarDisplay();
+}
+function closeTaskModal() { document.getElementById('taskModal').classList.add('hidden'); }
+function setStars(n) { state.taskStars = n; updateStarDisplay(); }
+function updateStarDisplay() {
+  document.querySelectorAll('.star-btn').forEach((b, i) => {
+    b.style.color = i < state.taskStars ? '#d4a574' : '#475569';
+  });
+}
+function addTask() {
+  const name = document.getElementById('taskName').value.trim();
+  const deadline = document.getElementById('taskDeadline').value;
+  const duration = document.getElementById('taskDuration').value;
+  if (!name) { toast('请输入任务名称'); return; }
+  state.tasks.push({
+    id: Date.now(),
+    name,
+    deadline: deadline || '未设定',
+    duration: parseFloat(duration),
+    importance: state.taskStars,
+    completed: false,
+    aiReason: ''
+  });
+  state.tasks = sortTasksByRule(state.tasks);
+  persist();
+  closeTaskModal();
+  renderAll();
+  toast('任务已添加 ✅');
+}
+function toggleTask(id) {
+  const t = state.tasks.find(t => t.id === id);
+  if (!t) return;
+  t.completed = !t.completed;
+  if (t.completed) { t.completedDate = getToday(); }
+  else { delete t.completedDate; }
+  persist(); renderAll();
+}
+function deleteTask(id) {
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  persist(); renderAll();
+}
+function toggleCompleted() {
+  document.getElementById('completedList').classList.toggle('hidden');
+}
+
+// ====== TASK SCROLL ISOLATION ======
+function handleTaskScroll(e) {
+  const el = document.getElementById('taskScrollWrapper');
+  const atTop = el.scrollTop <= 0;
+  const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+  if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
+    return; // let page scroll
+  }
+  e.preventDefault();
+  el.scrollTop += e.deltaY;
+}
+
+
+
+// ====== RULE-BASED SORT ======
+function sortTasksByRule(tasks) {
+  const active = tasks.filter(t => !t.completed);
+  const completed = tasks.filter(t => t.completed);
+  const now = new Date();
+  active.sort((a, b) => {
+    const scoreA = scoreTask(a, now);
+    const scoreB = scoreTask(b, now);
+    return scoreB - scoreA;
+  });
+  return [...active, ...completed];
+}
+function scoreTask(task, now) {
+  let score = task.importance * 10;
+  if (task.deadline && task.deadline !== '未设定') {
+    const daysLeft = Math.ceil((new Date(task.deadline) - now) / 86400000);
+    if (daysLeft <= 0) score += 50;
+    else if (daysLeft <= 1) score += 40;
+    else if (daysLeft <= 3) score += 25;
+    else if (daysLeft <= 7) score += 10;
+  }
+  score -= task.duration * 2;
+  return score;
+}
+
+// ====== AI SORT ======
+async function aiSortTasks() {
+  const active = state.tasks.filter(t => !t.completed);
+  if (active.length < 2) { toast('任务不足，无需AI排序'); return; }
+  if (!state.apiKey) { state.tasks = sortTasksByRule(state.tasks); persist(); renderAll(); toast('使用规则排序'); return; }
+
+  const taskListText = active.map((t, i) =>
+    `${i+1}. "${t.name}" | DDL:${t.deadline} | 预估:${t.duration}h | 重要性:${'★'.repeat(t.importance)}`
+  ).join('\n');
+
+  const prompt = `你是一个学习时间管理教练。以下是用户今天需要完成的任务列表，请分析后给出优先级排序。
+
+核心排序原则：
+1. DDL最近的任务优先（但也要结合重要性）
+2. 高重要性+近DDL = 绝对优先
+3. 低重要性的任务即使DDL近也可以适当延后
+4. 大任务（耗时长）建议在精力好的时候做
+
+任务列表：
+${taskListText}
+
+请严格按以下JSON格式回复（不要有其他内容）：
+{
+  "ranked": [任务id按优先级从高到低排列, 比如 [3,1,2]],
+  "reasons": {"任务id": "简短排序理由, 15字以内", ...}
+}`;
+
+  try {
+    document.getElementById('aiSortArea').querySelector('button').textContent = '⏳ AI正在分析...';
+    document.getElementById('aiSortArea').querySelector('button').disabled = true;
+
+    const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.apiKey}` },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: '你是一个精确的JSON输出器。只输出要求的JSON格式，不要有其他文字。' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 500
+      })
+    });
+
+    const data = await resp.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const result = JSON.parse(jsonMatch[0]);
+      state.tasks = sortByAI(state.tasks, result);
+      persist(); renderAll();
+      toast('AI已完成排序 🧠');
+    } else {
+      state.tasks = sortTasksByRule(state.tasks);
+      persist(); renderAll();
+      toast('AI回复格式异常，已用规则排序');
+    }
+  } catch (e) {
+    console.error(e);
+    state.tasks = sortTasksByRule(state.tasks);
+    persist(); renderAll();
+    toast('AI调用失败，已用规则排序');
+  } finally {
+    document.getElementById('aiSortArea').querySelector('button').textContent = '🤖 AI分析并排序任务优先级';
+    document.getElementById('aiSortArea').querySelector('button').disabled = false;
+  }
+}
+function sortByAI(tasks, aiResult) {
+  const active = tasks.filter(t => !t.completed);
+  const completed = tasks.filter(t => t.completed);
+  const sorted = aiResult.ranked.map(id => active.find(t => t.id === id)).filter(Boolean);
+  const remaining = active.filter(t => !aiResult.ranked.includes(t.id));
+  sorted.forEach(t => {
+    if (aiResult.reasons[t.id]) t.aiReason = aiResult.reasons[t.id];
+  });
+  return [...sorted, ...remaining, ...completed];
+}
+
+// ====== MOOD ======
+async function setMood(mood) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mood-'+mood).classList.add('active');
+
+  const label = { energetic: '精力充沛', neutral: '一般般', low: '提不起劲' }[mood];
+  state.moodHistory[getToday()] = { mood, label };
+  persist();
+
+  const active = state.tasks.filter(t => !t.completed);
+  const topTask = active[0];
+
+  if (state.apiKey && topTask) {
+    await aiMoodNudge(mood, topTask);
+  } else {
+    ruleBasedNudge(mood, topTask);
+  }
+  renderAll();
+}
+function ruleBasedNudge(mood, topTask) {
+  const nudgeText = document.getElementById('nudgeText');
+  const nudges = {
+    energetic: `今天精力充沛！建议趁状态好，先攻克「${topTask ? topTask.name : '最重要的任务'}」。专注2小时后休息一下，喝杯咖啡犒劳自己 ☕`,
+    neutral: `状态平稳，保持节奏就好。可以从中等难度的任务开始，逐步进入状态。别了坚持今天的阅读 📖`,
+    low: `没关系的，每个人都会有低能量的时候。不如从最简单的任务开始？哪怕只读10分钟，也是进步 💪`
+  };
+  nudgeText.textContent = nudges[mood];
+}
+async function aiMoodNudge(mood, topTask) {
+  const nudgeText = document.getElementById('nudgeText');
+  nudgeText.textContent = '⏳ AI正在思考...';
+
+  const label = { energetic: '精力充沛', neutral: '一般', low: '提不起劲' }[mood];
+  const tasksInfo = state.tasks.filter(t => !t.completed).slice(0,3).map(t => `"${t.name}"(DDL:${t.deadline})`).join('、');
+  const streak = state.readingDays[getToday()] || 0;
+
+  const prompt = `你是一个温暖的学习教练。学生今天心情「${label}」。
+他的待办任务：${tasksInfo || '无'}
+阅读连续天数：${streak}天
+
+请给出一条温暖的、具体的、可行的建议。语气温暖如导师，不要鸡汤，要具体可操作。50字左右。`;
+
+  try {
+    const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.apiKey}` },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: '你是一个温暖的学习教练，给出简短、具体、可操作的建议。50字左右。不要鸡汤套话。' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 150
+      })
+    });
+    const data = await resp.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    nudgeText.textContent = text.trim() || '今天也继续加油吧，一步一个脚印 💪';
+  } catch {
+    ruleBasedNudge(mood, topTask);
+  }
+}
+
+// ====== READING HABIT ======
+function checkInReading() {
+  const today = getToday();
+  if (state.readingDays[today]) { toast('今天已经打卡过了 ✅'); return; }
+
+  // Check if yesterday was checked in
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const yesterdayStr = yesterday.toISOString().slice(0,10);
+
+  state.readingDays[today] = 1;
+  persist();
+
+  // Celebration for milestones
+  const streak = calcStreak();
+  if (streak % 7 === 0) {
+    launchConfetti();
+    toast(`🎉 连续${streak}天！太棒了！继续保持这个节奏！`);
+  } else {
+    toast('打卡成功 📚 知识在积累');
+  }
+  renderAll();
+}
+function calcStreak() {
+  let streak = 0;
+  const d = new Date();
+  while (true) {
+    const ds = d.toISOString().slice(0,10);
+    if (state.readingDays[ds]) { streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+function calcLongestStreak() {
+  let longest = 0, current = 0;
+  const dates = Object.keys(state.readingDays).sort();
+  for (let i = 0; i < dates.length; i++) {
+    if (i === 0 || new Date(dates[i]) - new Date(dates[i-1]) === 86400000) {
+      current++;
+    } else {
+      longest = Math.max(longest, current);
+      current = 1;
+    }
+  }
+  return Math.max(longest, current);
+}
+function launchConfetti() {
+  // Simple confetti using DOM
+  const colors = ['#d4a574','#e8c9a8','#8ba08c','#c4987a','#b4956e','#dbbd99'];
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('div');
+    el.style.cssText = `position:fixed;top:-10px;left:${Math.random()*100}%;width:8px;height:8px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:2px;z-index:999;pointer-events:none;animation:confettiFall ${1+Math.random()*2}s ease-in forwards;animation-delay:${Math.random()*0.5}s`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
+  // Add keyframes if not exist
+  if (!document.getElementById('confettiStyle')) {
+    const style = document.createElement('style');
+    style.id = 'confettiStyle';
+    style.textContent = '@keyframes confettiFall { to { transform: translateY(100vh) rotate(720deg); opacity:0; } }';
+    document.head.appendChild(style);
+  }
+}
+
+// ====== WORK CHECK-IN ======
+function startWork() {
+  const today = getToday();
+  if (!state.workSessions[today]) state.workSessions[today] = { sessions: [], breaks: [] };
+
+  state.workStatus = 'working';
+  state.workTimerSeconds = 0;
+  state.workSessions[today].sessions.push({ start: new Date().toISOString(), end: null });
+  persist();
+  startTimer();
+  renderWorkBanner();
+  renderSidebarStats();
+  toast('开始学习了，加油！💪');
+}
+function startBreak() {
+  const today = getToday();
+  if (!state.workSessions[today]) return;
+
+  // End current work session
+  const lastSession = state.workSessions[today].sessions[state.workSessions[today].sessions.length - 1];
+  if (lastSession && !lastSession.end) lastSession.end = new Date().toISOString();
+
+  state.workStatus = 'break';
+  state.workTimerSeconds = 0;
+  state.workSessions[today].breaks.push({ start: new Date().toISOString(), end: null });
+  persist();
+  startTimer();
+  renderWorkBanner();
+  toast('休息一下 ☕');
+}
+function resumeWork() {
+  const today = getToday();
+  if (!state.workSessions[today]) return;
+
+  // End current break
+  const lastBreak = state.workSessions[today].breaks[state.workSessions[today].breaks.length - 1];
+  if (lastBreak && !lastBreak.end) lastBreak.end = new Date().toISOString();
+
+  state.workStatus = 'working';
+  state.workTimerSeconds = 0;
+  state.workSessions[today].sessions.push({ start: new Date().toISOString(), end: null });
+  persist();
+  startTimer();
+  renderWorkBanner();
+  toast('继续加油！🚀');
+}
+function endWork() {
+  const today = getToday();
+  if (!state.workSessions[today]) return;
+
+  // End current session
+  const lastSession = state.workSessions[today].sessions[state.workSessions[today].sessions.length - 1];
+  if (lastSession && !lastSession.end) lastSession.end = new Date().toISOString();
+
+  state.workStatus = 'idle';
+  stopTimer();
+  persist();
+  renderWorkBanner();
+  renderSidebarStats();
+  toast('今天辛苦了！学有所成 🎉');
+}
+function startTimer() {
+  stopTimer();
+  state.workTimerInterval = setInterval(() => {
+    state.workTimerSeconds++;
+    updateTimerDisplay();
+  }, 1000);
+}
+function stopTimer() {
+  if (state.workTimerInterval) { clearInterval(state.workTimerInterval); state.workTimerInterval = null; }
+}
+function updateTimerDisplay() {
+  const h = Math.floor(state.workTimerSeconds / 3600);
+  const m = Math.floor((state.workTimerSeconds % 3600) / 60);
+  const s = state.workTimerSeconds % 60;
+  document.getElementById('workTimer').textContent =
+    `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function getTodayWorkStats() {
+  const today = getToday();
+  const data = state.workSessions[today];
+  if (!data) return { workMin: 0, breakMin: 0 };
+
+  let workSec = 0, breakSec = 0;
+  data.sessions.forEach(s => {
+    if (s.end) workSec += (new Date(s.end) - new Date(s.start)) / 1000;
+  });
+  data.breaks.forEach(b => {
+    if (b.end) breakSec += (new Date(b.end) - new Date(b.start)) / 1000;
+  });
+
+  // Add current session if active
+  if (state.workStatus === 'working') {
+    const last = data.sessions[data.sessions.length - 1];
+    if (last && !last.end) workSec += (new Date() - new Date(last.start)) / 1000;
+  } else if (state.workStatus === 'break') {
+    const last = data.breaks[data.breaks.length - 1];
+    if (last && !last.end) breakSec += (new Date() - new Date(last.start)) / 1000;
+  }
+
+  return { workMin: Math.round(workSec / 60), breakMin: Math.round(breakSec / 60) };
+}
+function renderWorkBanner() {
+  const badge = document.getElementById('workStatusBadge');
+  const label = document.getElementById('workStatusLabel');
+  const timer = document.getElementById('workTimer');
+  const btnStart = document.getElementById('btnStartWork');
+  const btnBreak = document.getElementById('btnStartBreak');
+  const btnResume = document.getElementById('btnResumeWork');
+  const btnEnd = document.getElementById('btnEndWork');
+  const toggleBtn = document.getElementById('toggleSessions');
+
+  const today = getToday();
+  const hasSessions = state.workSessions[today] && (state.workSessions[today].sessions.length > 0 || state.workSessions[today].breaks.length > 0);
+
+  btnStart.classList.add('hidden');
+  btnBreak.classList.add('hidden');
+  btnResume.classList.add('hidden');
+  btnEnd.classList.add('hidden');
+  timer.classList.remove('timer-pulse');
+
+  if (state.workStatus === 'idle') {
+    badge.className = 'w-3 h-3 rounded-full bg-text-muted';
+    label.textContent = '未开始';
+    timer.textContent = '00:00:00';
+    btnStart.classList.remove('hidden');
+    toggleBtn.classList.toggle('hidden', !hasSessions);
+  } else if (state.workStatus === 'working') {
+    badge.className = 'w-3 h-3 rounded-full bg-accent-sage';
+    label.textContent = '工作中';
+    timer.classList.add('timer-pulse');
+    btnBreak.classList.remove('hidden');
+    btnEnd.classList.remove('hidden');
+    toggleBtn.classList.remove('hidden');
+  } else if (state.workStatus === 'break') {
+    badge.className = 'w-3 h-3 rounded-full bg-accent-warm';
+    label.textContent = '休息中';
+    timer.classList.add('timer-pulse');
+    btnResume.classList.remove('hidden');
+    btnEnd.classList.remove('hidden');
+    toggleBtn.classList.remove('hidden');
+  }
+
+  // Stats
+  const stats = getTodayWorkStats();
+  document.getElementById('statWorkMin').textContent = `${stats.workMin}min`;
+  document.getElementById('statBreakMin').textContent = `${stats.breakMin}min`;
+
+  renderWorkSessionsList();
+}
+function renderWorkSessionsList() {
+  const today = getToday();
+  const data = state.workSessions[today];
+  const list = document.getElementById('workSessionsList');
+  if (!data || (data.sessions.length === 0 && data.breaks.length === 0)) {
+    list.innerHTML = '<p class="text-text-muted">暂无记录</p>';
+    return;
+  }
+
+  const timeFmt = (iso) => new Date(iso).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+  let html = '';
+  const events = [];
+  data.sessions.forEach((s, i) => {
+    events.push({ type: 'work', start: s.start, end: s.end, label: '#' + (i + 1) });
+  });
+  data.breaks.forEach((b, i) => {
+    events.push({ type: 'break', start: b.start, end: b.end, label: '#' + (i + 1) });
+  });
+  events.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+  const totalWorkMin = data.sessions.reduce((sum, s) => sum + (s.end ? (new Date(s.end) - new Date(s.start)) / 60000 : 0), 0);
+
+  events.forEach(e => {
+    const startT = timeFmt(e.start);
+    const endT = e.end ? timeFmt(e.end) : '进行中';
+    const durationMin = e.end ? Math.round((new Date(e.end) - new Date(e.start)) / 60000) : null;
+    const widthPct = durationMin && totalWorkMin > 0 ? Math.round((durationMin / totalWorkMin) * 100) : 0;
+
+    const isWork = e.type === 'work';
+    const icon = isWork ? '📖' : '☕';
+    const bgBar = isWork ? 'bg-accent-sage/40' : 'bg-accent-warm/40';
+    const labelColor = isWork ? 'text-accent-sage' : 'text-accent-warm';
+    const dotColor = isWork ? 'bg-accent-sage' : 'bg-accent-warm';
+
+    html += '<div class="flex items-start gap-3 py-2 border-b border-white/5 last:border-0 group">' +
+      '<div class="flex flex-col items-center gap-1 pt-1">' +
+        '<span class="text-sm">' + icon + '</span>' +
+        '<span class="w-px h-full min-h-6 ' + (events.length > 1 ? 'bg-white/10' : 'bg-transparent') + '"></span>' +
+      '</div>' +
+      '<div class="flex-1 min-w-0">' +
+        '<div class="flex items-center justify-between mb-1">' +
+          '<span class="text-xs font-medium ' + labelColor + '">' + (e.type === 'work' ? '学习 ' : '休息 ') + e.label + '</span>' +
+          '<span class="text-xs text-text-muted">' + startT + ' &mdash; ' + endT + '</span>' +
+        '</div>' +
+        '<div class="flex items-center gap-2">' +
+          '<div class="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">' +
+            '<div class="h-full ' + bgBar + ' rounded-full transition-all duration-500" style="width:' + widthPct + '%"></div>' +
+          '</div>' +
+          '<span class="text-xs text-text-muted font-mono">' + (durationMin ? durationMin + 'min' : '...') + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="w-2 h-2 rounded-full ' + dotColor + ' mt-2 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity"></div>' +
+    '</div>';
+  });
+  list.innerHTML = html;
+}
+function toggleWorkSessions() {
+  document.getElementById('workSessionsPanel').classList.toggle('hidden');
+  const btn = document.getElementById('toggleSessions');
+  btn.textContent = document.getElementById('workSessionsPanel').classList.contains('hidden') ? '📋 今日时段记录 ▾' : '📋 今日时段记录 ▴';
+}
+// ====== STATISTICS ======
+let statsPeriod = 'week';
+
+function toggleStats() {
+  const panel = document.getElementById('statsPanel');
+  const isHidden = panel.classList.toggle('hidden');
+  if (!isHidden) { switchStatsPeriod('week'); panel.scrollIntoView({ behavior: 'smooth' }); }
+}
+
+function switchStatsPeriod(period) {
+  statsPeriod = period;
+  document.getElementById('statsPeriodWeek').className = period === 'week' ? 'px-4 py-1.5 rounded-xl text-sm font-medium bg-accent-warm/20 text-accent-warm btn-pulse' : 'px-4 py-1.5 rounded-xl text-sm text-text-secondary hover:bg-surface-light btn-pulse';
+  document.getElementById('statsPeriodMonth').className = period === 'month' ? 'px-4 py-1.5 rounded-xl text-sm font-medium bg-accent-warm/20 text-accent-warm btn-pulse' : 'px-4 py-1.5 rounded-xl text-sm text-text-secondary hover:bg-surface-light btn-pulse';
+  document.getElementById('statsPeriodYear').className = period === 'year' ? 'px-4 py-1.5 rounded-xl text-sm font-medium bg-accent-warm/20 text-accent-warm btn-pulse' : 'px-4 py-1.5 rounded-xl text-sm text-text-secondary hover:bg-surface-light btn-pulse';
+  renderStats();
+}
+
+function getDateRange(period) {
+  const dates = [];
+  let days;
+  if (period === 'week') days = 7;
+  else if (period === 'month') days = 30;
+  else days = 365;
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
+function renderStats() {
+  const dates = getDateRange(statsPeriod);
+  const now = new Date();
+
+  document.getElementById('statsDateRange').textContent = `${dates[0].slice(5)} — ${dates[dates.length-1].slice(5)}`;
+
+  const workData = [], breakData = [], readingData = [];
+  let totalCaffeine = 0, totalWater = 0, totalCoffee = 0;
+  let sumWorkMin = 0, sumBreakMin = 0, sumReadingDays = 0;
+
+  dates.forEach(ds => {
+    const ws = state.workSessions[ds];
+    let workMin = 0, breakMin = 0;
+    if (ws) {
+      ws.sessions.forEach(s => {
+        if (s.end) workMin += (new Date(s.end) - new Date(s.start)) / 60000;
+      });
+      ws.breaks.forEach(b => {
+        if (b.end) breakMin += (new Date(b.end) - new Date(b.start)) / 60000;
+      });
+    }
+    workData.push(Math.round(workMin));
+    breakData.push(Math.round(breakMin));
+    sumWorkMin += workMin;
+    sumBreakMin += breakMin;
+
+    readingData.push(state.readingDays[ds] ? 1 : 0);
+    if (state.readingDays[ds]) sumReadingDays++;
+
+    const cr = state.coffeeLog[ds] || [];
+    cr.forEach(r => { totalCaffeine += r.mg; totalCoffee++; });
+    const wr = state.waterLog[ds] || [];
+    wr.forEach(r => { totalWater += r.ml; });
+  });
+
+  renderBarChart('workChart', workData, 'workChartLabels', dates, 'rgba(212,165,116,0.85)', 'rgba(212,165,116,0.25)');
+  renderBarChart('breakChart', breakData, 'breakChartLabels', dates, 'rgba(212,165,116,0.5)', 'rgba(212,165,116,0.12)');
+  renderBarChart('readingChart', readingData, 'readingChartLabels', dates, 'rgba(139,160,140,0.7)', 'rgba(139,160,140,0.18)');
+
+  document.getElementById('statsTotalCaffeine').textContent = `${totalCaffeine}mg`;
+  document.getElementById('statsTotalWater').textContent = `${(totalWater/1000).toFixed(1)}L`;
+  document.getElementById('statsSumWork').textContent = `${(sumWorkMin/60).toFixed(1)}h`;
+  document.getElementById('statsSumBreak').textContent = `${(sumBreakMin/60).toFixed(1)}h`;
+  document.getElementById('statsSumReading').textContent = `${sumReadingDays}天`;
+  document.getElementById('statsSumCoffee').textContent = `${totalCoffee}杯`;
+  document.getElementById('statsSumWater').textContent = `${(totalWater/1000).toFixed(1)}L`;
+}
+
+function renderBarChart(containerId, data, labelsId, dates, gradientStart, gradientEnd) {
+  const container = document.getElementById(containerId);
+  const labelsContainer = document.getElementById(labelsId);
+  const maxVal = Math.max(...data, 2);
+  const isReading = containerId === 'readingChart';
+  const containerH = isReading ? 96 : 128;
+  const labelH = 14;
+
+  container.innerHTML = data.map((v, i) => {
+    const barH = Math.max(Math.round(v / maxVal * (containerH - labelH)), v > 0 ? 4 : 0);
+    const barBg = v > 0 ? `linear-gradient(to top, ${gradientStart}, ${gradientEnd})` : 'rgba(255,255,255,0.04)';
+    const bg = isReading ? (v > 0 ? barBg : 'rgba(255,255,255,0.04)') : barBg;
+    return `<div class="flex-1 flex flex-col justify-end items-center gap-0.5" title="${dates[i]}: ${v}">
+      <span class="chart-val" style="font-size:9px;color:#64748b;opacity:${v>0?1:0};line-height:${labelH}px;flex-shrink:0">${v}</span>
+      <div style="height:${barH}px;background:${bg};border-radius:3px 3px 0 0;width:100%;min-width:3px;transition:height 0.4s ease"></div>
+    </div>`;
+  }).join('');
+
+  const step = Math.max(1, Math.floor(dates.length / 5));
+  const labelIndices = new Set([0, dates.length - 1]);
+  for (let i = step; i < dates.length - 1; i += step) labelIndices.add(i);
+  const labels = dates.map((d, i) => labelIndices.has(i) ? d.slice(5) : '');
+  labelsContainer.innerHTML = labels.map(l => `<span>${l}</span>`).join('');
+}
+
+function switchTrackerTab(tab) {
+  state.trackerTab = tab;
+  document.getElementById('coffeePanel').classList.toggle('hidden', tab !== 'coffee');
+  document.getElementById('waterPanel').classList.toggle('hidden', tab !== 'water');
+  document.getElementById('tab-coffee').className = tab === 'coffee' ? 'flex-1 text-sm py-1.5 rounded-lg bg-accent-warm/20 text-accent-warm font-medium btn-pulse transition-all' : 'flex-1 text-sm py-1.5 rounded-lg text-text-secondary btn-pulse transition-all';
+  document.getElementById('tab-water').className = tab === 'water' ? 'flex-1 text-sm py-1.5 rounded-lg bg-blue-500/20 text-accent-warm font-medium btn-pulse transition-all' : 'flex-1 text-sm py-1.5 rounded-lg text-text-secondary btn-pulse transition-all';
+}
+function updateCoffeeType() {
+  const brand = document.getElementById('coffeeBrand').value;
+  const types = Object.keys(COFFEE_DB[brand] || COFFEE_DB['其他']);
+  const sel = document.getElementById('coffeeType');
+  sel.innerHTML = types.map(t => `<option value="${t}">${t}</option>`).join('');
+  updateCoffeeMg();
+}
+function updateCoffeeMg() {
+  const brand = document.getElementById('coffeeBrand').value;
+  const type = document.getElementById('coffeeType').value;
+  const mg = (COFFEE_DB[brand] && COFFEE_DB[brand][type]) ? COFFEE_DB[brand][type] : 100;
+  document.getElementById('coffeeMgInput').value = mg;
+}
+function syncCoffeeMg() {
+  // Allow custom mg
+}
+function addCoffee() {
+  const brand = document.getElementById('coffeeBrand').value;
+  const type = document.getElementById('coffeeType').value;
+  const mg = parseInt(document.getElementById('coffeeMgInput').value) || 100;
+  const today = getToday();
+
+  if (!state.coffeeLog[today]) state.coffeeLog[today] = [];
+  state.coffeeLog[today].push({ time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'}), brand, type, mg });
+  persist(); renderAll();
+  toast(`已记录 ${brand}${type} (${mg}mg) ☕`);
+}
+function addWater(ml) {
+  if (!ml || ml <= 0) { toast('请输入有效水量'); return; }
+  const today = getToday();
+  if (!state.waterLog[today]) state.waterLog[today] = [];
+  state.waterLog[today].push({ time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'}), ml });
+  persist(); renderAll();
+  toast(`已记录饮水 ${ml}ml 💧`);
+}
+
+// ====== RENDER ======
+function renderAll() {
+  renderTasks();
+  renderMood();
+  renderReading();
+  renderTracker();
+  renderWorkBanner();
+  renderSidebarStats();
+}
+function renderTasks() {
+  const today = getToday();
+  const active = state.tasks.filter(t => !t.completed);
+  const completed = state.tasks.filter(t => t.completed && t.completedDate === today);
+  const list = document.getElementById('taskList');
+  const badge = document.getElementById('priorityBadge');
+
+  badge.textContent = `${active.length}个待办`;
+  badge.className = active.length > 0 ? 'text-xs px-2 py-0.5 rounded-full bg-accent-rose/20 text-accent-rose' : 'text-xs px-2 py-0.5 rounded-full bg-surface-light text-text-muted';
+
+  if (active.length === 0) {
+    list.innerHTML = '<p class="text-text-muted text-sm text-center py-8">还没有任务，点击右上角「添加任务」开始规划今天</p>';
+  } else {
+    const renderTaskCard = (t, i) => {
+      const colorClass = i === 0 ? 'border-l-accent-rose' : i === 1 ? 'border-l-accent-warm' : 'border-l-accent-sage';
+      const label = i === 0 ? 'Top 1' : i === 1 ? 'Top 2' : `Top ${i+1}`;
+      const labelColor = i === 0 ? 'bg-accent-rose/20 text-accent-rose' : i === 1 ? 'bg-accent-warm/20 text-accent-warm' : 'bg-accent-sage/20 text-accent-sage';
+      return `
+        <div class="glass-light rounded-xl p-4 border-l-2 ${colorClass} flex items-start justify-between card-hover">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs px-1.5 py-0.5 rounded ${labelColor}">${label}</span>
+              <span class="font-medium text-sm truncate">${t.name}</span>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-text-muted">
+              <span>⏰ ${t.deadline === '未设定' ? '无截止' : formatDate(t.deadline)}</span>
+              <span>📏 ${t.duration}h</span>
+              <span>${'★'.repeat(t.importance)}${'☆'.repeat(5-t.importance)}</span>
+            </div>
+            ${t.aiReason ? `<p class="text-xs text-accent-warm mt-1">💡 ${t.aiReason}</p>` : ''}
+          </div>
+          <div class="flex items-center gap-1 ml-3 flex-shrink-0">
+            <button onclick="toggleTask(${t.id})" class="w-8 h-8 rounded-lg border border-accent-sage/30 hover:bg-accent-sage/20 text-accent-sage text-sm btn-pulse" title="完成">✓</button>
+            <button onclick="deleteTask(${t.id})" class="w-8 h-8 rounded-lg border border-accent-rose/20 hover:bg-accent-rose/20 text-text-muted hover:text-accent-rose text-sm btn-pulse" title="删除">×</button>
+          </div>
+        </div>`;
+    };
+    list.innerHTML = active.map(renderTaskCard).join('');
+  }
+
+  // Scroll task area to top on re-render if needed
+  const wrapper = document.getElementById('taskScrollWrapper');
+  if (active.length > 5) {
+    wrapper.style.maxHeight = '420px';
+    wrapper.style.overflowY = 'auto';
+  } else {
+    wrapper.style.maxHeight = 'none';
+    wrapper.style.overflowY = 'visible';
+  }
+
+  // Completed section
+  const compSection = document.getElementById('completedSection');
+  const compList = document.getElementById('completedList');
+  const compCount = document.getElementById('completedCount');
+  if (completed.length > 0) {
+    compSection.classList.remove('hidden');
+    compCount.textContent = completed.length;
+    compList.innerHTML = completed.map(t => `
+      <div class="glass-light rounded-xl px-4 py-2 flex items-center justify-between opacity-60">
+        <span class="text-sm line-through text-text-muted">${t.name}</span>
+        <button onclick="deleteTask(${t.id})" class="text-text-muted hover:text-accent-rose text-xs btn-pulse">删除</button>
+      </div>`).join('');
+  } else {
+    compSection.classList.add('hidden');
+  }
+
+  // History button visibility
+  const historyBtn = document.getElementById('historyToggleBtn');
+  const pastCount = state.tasks.filter(t => t.completed && t.completedDate && t.completedDate !== today).length;
+  const noDateCount = state.tasks.filter(t => t.completed && !t.completedDate).length;
+  const totalHistory = pastCount + noDateCount;
+  document.getElementById('historyCount').textContent = totalHistory;
+  historyBtn.style.display = totalHistory > 0 ? 'block' : 'none';
+}
+
+function toggleHistory() {
+  const panel = document.getElementById('historyList');
+  const btn = document.getElementById('historyToggleBtn');
+  const isHidden = panel.classList.toggle('hidden');
+  const arrow = isHidden ? '▾' : '▴';
+  const count = document.getElementById('historyCount').textContent;
+  btn.innerHTML = '📋 历史已完成 (' + count + ') ' + arrow;
+  if (!isHidden) renderHistory();
+}
+
+function renderHistory() {
+  const today = getToday();
+  const pastCompleted = state.tasks.filter(t => t.completed && t.completedDate && t.completedDate !== today);
+  const noDateCompleted = state.tasks.filter(t => t.completed && !t.completedDate);
+
+  const groups = {};
+  pastCompleted.forEach(t => {
+    const d = t.completedDate;
+    if (!groups[d]) groups[d] = [];
+    groups[d].push(t);
+  });
+
+  const sortedDates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+
+  let html = '';
+  sortedDates.forEach(ds => {
+    const tasks = groups[ds];
+    const d = new Date(ds + 'T00:00:00');
+    const dateLabel = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 周' + '日一二三四五六'[d.getDay()];
+    html += `<div class="glass-light rounded-xl p-3">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-medium text-text-secondary">📅 ${dateLabel}</span>
+        <span class="text-xs text-text-muted">${tasks.length}个任务</span>
+      </div>
+      <div class="space-y-1">
+        ${tasks.map(t => `
+          <div class="flex items-center justify-between text-xs text-text-muted pl-2 border-l-2 border-accent-sage/30">
+            <span class="line-through">${t.name}</span>
+            <button onclick="deleteTask(${t.id});renderHistory();" class="text-text-muted hover:text-accent-rose ml-2 btn-pulse">删除</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  });
+
+  if (noDateCompleted.length > 0) {
+    html += `<div class="glass-light rounded-xl p-3">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-medium text-text-secondary">📅 更早记录</span>
+        <span class="text-xs text-text-muted">${noDateCompleted.length}个任务</span>
+      </div>
+      <div class="space-y-1">
+        ${noDateCompleted.map(t => `
+          <div class="flex items-center justify-between text-xs text-text-muted pl-2 border-l-2 border-surface-lighter">
+            <span class="line-through">${t.name}</span>
+            <button onclick="deleteTask(${t.id});renderHistory();" class="text-text-muted hover:text-accent-rose ml-2 btn-pulse">删除</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('historyList').innerHTML = html || '<p class="text-text-muted text-xs text-center py-4">暂无历史已完成任务</p>';
+}
+function renderMood() {
+  const today = getToday();
+  const moodData = state.moodHistory[today];
+  if (moodData) {
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+    const el = document.getElementById('mood-' + moodData.mood);
+    if (el) el.classList.add('active');
+  }
+
+  // Mood trend
+  const trendRow = document.getElementById('moodTrendRow');
+  const emojis = { energetic: '😊', neutral: '😐', low: '😫' };
+  let html = '';
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().slice(0,10);
+    html += `<span title="${ds}" class="opacity-${state.moodHistory[ds] ? '100' : '30'}">${state.moodHistory[ds] ? emojis[state.moodHistory[ds].mood] : '·'}</span>`;
+  }
+  trendRow.innerHTML = html;
+}
+function renderReading() {
+  const streak = calcStreak();
+  const longest = calcLongestStreak();
+  const today = getToday();
+
+  document.getElementById('streakCount').textContent = streak;
+  document.getElementById('longestStreak').textContent = longest;
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  document.getElementById('monthlyDays').textContent = daysInMonth;
+
+  let monthCount = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if (state.readingDays[ds]) monthCount++;
+  }
+  document.getElementById('monthlyRead').textContent = monthCount;
+
+  // Streak ring
+  const ring = document.getElementById('streakRing');
+  const circumference = 238.76;
+  const progress = Math.min(streak / 30, 1);
+  ring.style.strokeDashoffset = circumference * (1 - progress);
+
+  // Checkin button
+  const btn = document.getElementById('readingCheckin');
+  if (state.readingDays[today]) {
+    btn.textContent = '✅ 今日已打卡';
+    btn.className = 'flex-1 bg-accent-sage/30 border border-accent-sage/50 text-accent-sage rounded-xl py-2 px-3 font-medium transition-all text-sm opacity-80';
+  } else {
+    btn.textContent = '✅ 今天阅读了吗？点击打卡';
+    btn.className = 'flex-1 bg-accent-sage/20 hover:bg-accent-sage/30 border border-accent-sage/30 text-accent-sage rounded-xl py-2 px-3 font-medium btn-pulse transition-all text-sm';
+  }
+
+  // Heatmap — 12 weeks × 7 days grid, oldest top-left, newest bottom-right
+  const heatmap = document.getElementById('heatmap');
+  const weeks = 12;
+  const cells = [];
+  for (let w = weeks - 1; w >= 0; w--) {
+    for (let d = 6; d >= 0; d--) {
+      const date = new Date(); date.setDate(date.getDate() - (w*7 + d));
+      const ds = date.toISOString().slice(0,10);
+      const intensity = state.readingDays[ds] ? 3 : 0;
+      cells.push(`<div class="heat-cell heat-${intensity}" title="${ds}"></div>`);
+    }
+  }
+  heatmap.innerHTML = cells.join('');
+}
+function renderTracker() {
+  const today = getToday();
+  const coffeeRecords = state.coffeeLog[today] || [];
+  const waterRecords = state.waterLog[today] || [];
+
+  // Coffee
+  const totalCoffee = coffeeRecords.length;
+  const totalMg = coffeeRecords.reduce((s, r) => s + r.mg, 0);
+  document.getElementById('coffeeCups').textContent = totalCoffee;
+  document.getElementById('coffeeMg').textContent = totalMg;
+
+  const coffeeRing = document.getElementById('coffeeRing');
+  const cCirc = 238.76;
+  coffeeRing.style.strokeDashoffset = cCirc * (1 - Math.min(totalMg / 400, 1));
+  if (totalMg > 350) coffeeRing.style.stroke = '#b47878';
+
+  // Water
+  const totalWater = waterRecords.reduce((s, r) => s + r.ml, 0);
+  const waterL = (totalWater / 1000).toFixed(1);
+  document.getElementById('waterLiters').textContent = waterL;
+  document.getElementById('waterRemain').textContent = Math.max(0, (2.0 - parseFloat(waterL))).toFixed(1);
+
+  const waterRing = document.getElementById('waterRing');
+  const wCirc = 238.76;
+  waterRing.style.strokeDashoffset = wCirc * (1 - Math.min(totalWater / 2000, 1));
+
+  // Log — merged and sorted newest first
+  const log = document.getElementById('todayLog');
+  if (coffeeRecords.length === 0 && waterRecords.length === 0) {
+    log.innerHTML = '<p class="text-text-muted">暂无记录</p>';
+  } else {
+    const allLogs = [
+      ...coffeeRecords.map((r, i) => ({ ...r, kind: 'coffee', idx: i, label: `☕ ${r.brand}·${r.type} ${r.mg}mg — ${r.time}` })),
+      ...waterRecords.map((r, i) => ({ ...r, kind: 'water', idx: i, label: `💧 ${r.ml}ml — ${r.time}` }))
+    ].sort((a, b) => b.time.localeCompare(a.time));
+    log.innerHTML = allLogs.map(r =>
+      `<div class="flex items-center justify-between text-xs py-1">
+        <span>${r.label}</span>
+        <button onclick="delete${r.kind === 'coffee' ? 'Coffee' : 'Water'}Log(${r.idx})" class="text-text-muted hover:text-accent-rose ml-2 text-xs btn-pulse opacity-50 hover:opacity-100" title="删除">×</button>
+      </div>`
+    ).join('');
+  }
+}
+
+function deleteCoffeeLog(index) {
+  const today = getToday();
+  if (!state.coffeeLog[today]) return;
+  state.coffeeLog[today].splice(index, 1);
+  persist(); renderAll();
+  toast('已删除咖啡记录');
+}
+
+function deleteWaterLog(index) {
+  const today = getToday();
+  if (!state.waterLog[today]) return;
+  state.waterLog[today].splice(index, 1);
+  persist(); renderAll();
+  toast('已删除饮水记录');
+}
+function renderSidebarStats() {
+  const active = state.tasks.filter(t => !t.completed).length;
+  const streak = calcStreak();
+  const today = getToday();
+  const coffees = (state.coffeeLog[today] || []).length;
+  const waters = (state.waterLog[today] || []).reduce((s, r) => s + r.ml, 0);
+  const workStats = getTodayWorkStats();
+
+  document.getElementById('statPriority').textContent = active;
+  document.getElementById('statStreak').textContent = `${streak}天`;
+  document.getElementById('statCoffee').textContent = `${coffees}杯`;
+  document.getElementById('statWater').textContent = `${(waters/1000).toFixed(1)}L`;
+  document.getElementById('statWork').textContent = `${workStats.workMin}min`;
+}
+
+// ====== WALLPAPER ======
+function setWallpaper(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const dataUrl = ev.target.result;
+    state.wallpaper = dataUrl;
+    persist();
+    applyWallpaper(dataUrl);
+    toast('壁纸已更新 🖼️');
+  };
+  reader.readAsDataURL(file);
+}
+function applyWallpaper(dataUrl) {
+  document.body.style.setProperty('--wallpaper-url', `url(${dataUrl})`);
+  document.body.classList.add('has-wallpaper');
+  document.getElementById('removeWallpaperBtn').classList.remove('hidden');
+}
+function removeWallpaper() {
+  state.wallpaper = '';
+  persist();
+  document.body.classList.remove('has-wallpaper');
+  document.body.style.removeProperty('--wallpaper-url');
+  document.getElementById('removeWallpaperBtn').classList.add('hidden');
+  toast('壁纸已移除');
+}
+
+// ====== AI DAILY SUMMARY ======
+function toggleDailySummary() {
+  const panel = document.getElementById('dailySummaryPanel');
+  const isHidden = panel.classList.toggle('hidden');
+  if (!isHidden) {
+    document.getElementById('dailySummaryText').textContent = '点击下方按钮，生成今日总结...';
+    document.getElementById('btnGenSummary').disabled = false;
+    document.getElementById('btnGenSummary').textContent = '✨ 生成今日总结';
+    panel.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+async function generateDailySummary() {
+  const btn = document.getElementById('btnGenSummary');
+  const text = document.getElementById('dailySummaryText');
+  btn.disabled = true;
+  btn.textContent = '⏳ AI正在总结...';
+
+  const today = getToday();
+  const workStats = getTodayWorkStats();
+  const streak = calcStreak();
+  const mood = state.moodHistory[today];
+  const tasks = state.tasks.filter(t => !t.completed);
+  const completed = state.tasks.filter(t => t.completed && t.completedDate === today);
+  const coffees = (state.coffeeLog[today] || []).length;
+  const totalWater = (state.waterLog[today] || []).reduce((s, r) => s + r.ml, 0);
+
+  const dataSummary = `今日工作: ${workStats.workMin}分钟, 休息: ${workStats.breakMin}分钟
+心情: ${mood ? mood.label : '未记录'}
+待办任务: ${tasks.length}个 (已完成${completed.length}个)
+${tasks.length > 0 ? '待办: ' + tasks.slice(0,3).map(t => t.name).join('、') : ''}
+阅读连续: ${streak}天
+咖啡: ${coffees}杯, 饮水: ${(totalWater/1000).toFixed(1)}L`;
+
+  if (state.apiKey) {
+    try {
+      const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.apiKey}` },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            { role: 'system', content: '你是一个温暖的学习教练。根据学生今日数据，写一段150字左右的总结：先肯定今天做得好的地方，再温和地给出1条明天可以改进的建议，最后给一句鼓励。语气温暖真诚，不要套话。用中文。' },
+            { role: 'user', content: `今天数据：\n${dataSummary}\n\n请总结：` }
+          ],
+          temperature: 0.7,
+          max_tokens: 300
+        })
+      });
+      const data = await resp.json();
+      const content = data.choices?.[0]?.message?.content || '';
+      text.textContent = content.trim() || ruleBasedSummary();
+    } catch {
+      text.textContent = ruleBasedSummary();
+    }
+  } else {
+    text.textContent = ruleBasedSummary();
+  }
+  btn.textContent = '🔄 重新生成';
+  btn.disabled = false;
+}
+
+function ruleBasedSummary() {
+  const today = getToday();
+  const workStats = getTodayWorkStats();
+  const streak = calcStreak();
+  const mood = state.moodHistory[today];
+  const completed = state.tasks.filter(t => t.completed && t.completedDate === today).length;
+  const active = state.tasks.filter(t => !t.completed).length;
+  const coffees = (state.coffeeLog[today] || []).length;
+  const totalWater = (state.waterLog[today] || []).reduce((s, r) => s + r.ml, 0);
+
+  let summary = '';
+
+  // Work summary
+  if (workStats.workMin >= 240) summary += `👏 今天学习了${Math.round(workStats.workMin/60)}小时，非常充实！专注学习的同时，也合理安排了${workStats.breakMin}分钟休息。\n\n`;
+  else if (workStats.workMin >= 60) summary += `📋 今天学习了${workStats.workMin}分钟，保持了良好的学习节奏。`;
+  else if (workStats.workMin > 0) summary += `⏱️ 今天学习了${workStats.workMin}分钟，每一步积累都值得肯定。`;
+  else summary += `🌅 今天还没有开始学习计时。`;
+
+  // Task summary
+  if (completed > 0) summary += `✅ 完成了${completed}个任务，`;
+  if (active > 0) summary += `还有${active}个待办事项需要处理。\n\n`;
+  else if (completed > 0) summary += `全部任务都完成了！\n\n`;
+  else summary += `还没有添加任务。\n\n`;
+
+  // Reading
+  if (streak > 0) summary += `📖 已连续阅读${streak}天，继续保持这个节奏！`;
+  else summary += `📖 今天还没打卡阅读，明天试试从15分钟开始。`;
+
+  // Mood
+  if (mood) {
+    if (mood.mood === 'low') summary += `\n💜 今天心情不太高涨，但你已经很棒了——能注意到自己的状态本身就是一种自我关怀。明天从小任务开始，一点点找回节奏。`;
+    else summary += `\n😊 今天整体状态不错，继续照顾好自己。`;
+  }
+
+  // Coffee/Water
+  if (coffees > 0) summary += `\n☕ 今天喝了${coffees}杯咖啡，`;
+  else summary += `\n`;
+  summary += `💧 饮水${(totalWater/1000).toFixed(1)}L`;
+
+  if (totalWater < 1000) summary += `，明天记得多喝水哦。`;
+  else summary += `，补水充足！`;
+
+  summary += `\n\n💪 明天继续加油，一步一个脚印。`;
+  return summary;
+}
+
+
+// ====== NEWS SUMMARY ======
+function toggleNewsSummary() {
+  const panel = document.getElementById('newsSummaryPanel');
+  const dailyPanel = document.getElementById('dailySummaryPanel');
+  const isHidden = panel.classList.toggle('hidden');
+  if (!isHidden) {
+    if (!dailyPanel.classList.contains('hidden')) dailyPanel.classList.add('hidden');
+    document.getElementById('newsSummaryText').textContent = '点击下方按钮，获取今日科技资讯...';
+    document.getElementById('btnGenNews').disabled = false;
+    document.getElementById('btnGenNews').textContent = '📰 获取今日资讯';
+    panel.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+async function generateNewsSummary() {
+  const btn = document.getElementById('btnGenNews');
+  const text = document.getElementById('newsSummaryText');
+  btn.disabled = true;
+  btn.textContent = '⏳ 正在获取新闻...';
+
+  if (!state.apiKey) {
+    text.textContent = '请先在左侧栏「🔑 设置API」中设置 DeepSeek API Key，然后使用此功能。';
+    btn.textContent = '📰 获取今日资讯';
+    btn.disabled = false;
+    return;
+  }
+
+  try {
+    btn.textContent = '⏳ 正在抓取Hacker News头条...';
+    const topResp = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
+    const topIds = await topResp.json();
+    const top20 = topIds.slice(0, 20);
+
+    const stories = await Promise.all(
+      top20.map(id =>
+        fetch('https://hacker-news.firebaseio.com/v0/item/' + id + '.json').then(function(r) { return r.json(); })
+      )
+    );
+
+    const headlines = stories
+      .filter(function(s) { return s && s.title; })
+      .map(function(s, i) { return (i + 1) + '. ' + s.title + (s.url ? ' (' + new URL(s.url).hostname + ')' : '') + ' | ' + (s.score || 0) + ' points | ' + (s.descendants || 0) + ' comments'; })
+      .join('\n');
+
+    btn.textContent = '⏳ AI正在生成新闻简报...';
+    const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.apiKey },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: '你是一个顶尖的科技新闻主编。请将以下Hacker News今日头条提炼为一份中文新闻简报，按三大板块组织：\n\n🤖 AI前沿：大模型新发布、AI产品更新、重要研究突破（2-3条）\n🚀 科技要闻：重大科技动态、互联网公司大动作（2-3条）\n🔥 今日热议：最受关注的话题，不管是科技还是社会热点（1-2条）\n\n每条一句话说清「发生了什么+为什么重要」。最后用一句话总结今日风向。用中文，简洁有料，300字左右。不要套话，不要"今日科技新闻简报"之类的标题。' },
+          { role: 'user', content: '今日Hacker News头条（按热度排序）：\n' + headlines + '\n\n请生成中文新闻简报：' }
+        ],
+        temperature: 0.3,
+        max_tokens: 600
+      })
+    });
+
+    const data = await resp.json();
+    const aiContent = data.choices?.[0]?.message?.content || '';
+    text.textContent = aiContent.trim() || '未能获取新闻摘要，请稍后重试。';
+  } catch (e) {
+    console.error('News fetch error:', e);
+    text.textContent = '获取新闻失败，可能是网络问题。请检查网络连接后重试。提示：你也可以在 Claude Code 对话中使用新闻搜索工作流（支持中文源：IT之家/36氪/量子位等）。';
+  }
+
+  btn.textContent = '🔄 重新获取';
+  btn.disabled = false;
+}
+
+// ====== DATA IMPORT/EXPORT ======
+function exportData() {
+  const data = {
+    tasks: state.tasks,
+    readingDays: state.readingDays,
+    moodHistory: state.moodHistory,
+    coffeeLog: state.coffeeLog,
+    waterLog: state.waterLog,
+    workSessions: state.workSessions,
+    profile: state.profile,
+    wallpaper: state.wallpaper,
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `learnwitness-backup-${getToday()}.json`; a.click();
+  URL.revokeObjectURL(url);
+  toast('数据已导出 📤');
+}
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.tasks) state.tasks = data.tasks;
+      if (data.readingDays) state.readingDays = data.readingDays;
+      if (data.moodHistory) state.moodHistory = data.moodHistory;
+      if (data.coffeeLog) state.coffeeLog = data.coffeeLog;
+      if (data.waterLog) state.waterLog = data.waterLog;
+      if (data.workSessions) state.workSessions = data.workSessions;
+      if (data.profile) state.profile = data.profile;
+      if (data.wallpaper) { state.wallpaper = data.wallpaper; applyWallpaper(data.wallpaper); }
+      persist(); renderAll();
+      toast('数据已导入 📥');
+    } catch { toast('文件格式错误'); }
+  };
+  reader.readAsText(file);
+}
+function resetData() {
+  if (confirm('确定要清空所有数据吗？此操作不可撤销。建议先导出备份。')) {
+    stopTimer();
+    Object.assign(state, {
+      tasks: [],
+      readingDays: {},
+      moodHistory: {},
+      coffeeLog: {},
+      waterLog: {},
+      workSessions: {},
+      profile: { name: '学习者', id: '终身学习者', avatar: '📚' },
+      wallpaper: '',
+      workTimerSeconds: 0,
+      workStatus: 'idle'
+    });
+    document.body.classList.remove('has-wallpaper');
+    document.body.style.removeProperty('--wallpaper-url');
+    document.getElementById('removeWallpaperBtn').classList.add('hidden');
+    persist(); renderAll();
+    toast('数据已重置');
+  }
+}
+
+// ====== STARTUP ======
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* 深色主题自定义基础样式 */
+@layer base {
+  :root {
+    /* 主色彩 - 深蓝紫色调 */
+    --color-primary-50: #f0f2ff;
+    --color-primary-100: #d9deff;
+    --color-primary-200: #b3c0ff;
+    --color-primary-300: #8da2ff;
+    --color-primary-400: #6784ff;
+    --color-primary-500: #4166ff;
+    --color-primary-600: #2a4ee0;
+    --color-primary-700: #1a3ab3;
+    --color-primary-800: #0e2986;
+    --color-primary-900: #071b59;
+
+    /* 辅助色 - 绿松石调 */
+    --color-secondary-50: #ebffff;
+    --color-secondary-100: #c8fdfd;
+    --color-secondary-200: #95f9f9;
+    --color-secondary-300: #62f5f5;
+    --color-secondary-400: #2fefe9;
+    --color-secondary-500: #00e6d6;
+    --color-secondary-600: #00b3a6;
+    --color-secondary-700: #008078;
+    --color-secondary-800: #004d47;
+    --color-secondary-900: #001a18;
+
+    /* 强调色 - 紫色调 */
+    --color-accent-50: #f9f0ff;
+    --color-accent-100: #f0d9ff;
+    --color-accent-500: #a855f7;
+    --color-accent-600: #9333ea;
+    --color-accent-700: #7e22ce;
+
+    /* 深色背景渐变 */
+    --color-bg-gradient-start: #0a0a0f;
+    --color-bg-gradient-end: #111827;
+    --color-surface: #1f2937;
+    --color-surface-light: #374151;
+    --color-surface-lighter: #4b5563;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-gray-900 via-gray-900 to-[var(--color-bg-gradient-end)] text-gray-100;
+    min-height: 100vh;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* 滚动条美化 */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-800 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary-700 rounded-full hover:bg-primary-600;
+  }
+}
+
+/* 自定义组件样式 */
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-500
+           transition-all duration-200 active:scale-95
+           shadow-md hover:shadow-lg shadow-primary-900/30
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-900;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-secondary-600 text-gray-900 rounded-lg hover:bg-secondary-500
+           transition-all duration-200 active:scale-95
+           shadow-md hover:shadow-lg shadow-secondary-900/30
+           focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 focus:ring-offset-gray-900;
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2 bg-transparent hover:bg-gray-800 text-gray-300 hover:text-white
+           border border-gray-700 hover:border-gray-600 rounded-lg
+           transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-gradient-to-b from-gray-800/80 to-gray-900/80 backdrop-blur-lg rounded-2xl p-6
+           shadow-2xl shadow-black/30 border border-gray-700/50
+           hover:shadow-primary-900/10 hover:border-primary-500/20 transition-all duration-300;
+  }
+
+  .input-primary {
+    @apply px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           placeholder:text-gray-500 text-gray-100
+           transition-all duration-200 hover:border-gray-600;
+  }
+
+  .sidebar {
+    @apply bg-gradient-to-b from-gray-900 via-gray-900 to-gray-900 backdrop-blur-lg
+           border-r border-gray-800/50 shadow-2xl shadow-black/30;
+  }
+
+  .glass {
+    @apply bg-gray-800/40 backdrop-blur-lg border border-gray-700/30;
+  }
+
+  .surface {
+    @apply bg-gray-800/60 backdrop-blur-sm rounded-xl border border-gray-700/30;
+  }
+
+  .surface-light {
+    @apply bg-gray-700/40 backdrop-blur-sm rounded-lg border border-gray-600/20;
+  }
+
+  .chip {
+    @apply px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white
+           rounded-full border border-gray-700 hover:border-gray-600
+           transition-all duration-200 text-sm;
+  }
+
+  .tag-badge {
+    @apply px-2 py-1 bg-primary-900/20 text-primary-300 rounded-full
+           text-xs border border-primary-800/30 hover:bg-primary-900/30
+           transition-colors duration-200;
+  }
+}
+
+/* 动画效果 */
+.pulse-soft {
+  animation: pulse-soft 2s infinite;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.floating {
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* 打字机效果 */
+.typewriter {
+  overflow: hidden;
+  border-right: 2px solid var(--color-primary-500);
+  white-space: nowrap;
+  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: var(--color-primary-500); }
+}
+
+/* 现代动画 */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px var(--color-primary-500/20); }
+  50% { box-shadow: 0 0 40px var(--color-primary-500/40); }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.slide-up {
+  animation: slide-up 0.4s ease-out;
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease-out;
+}

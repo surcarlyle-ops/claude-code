@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学迹 LearnWitness - 完整交互版</title>
+
+    <!-- 引入外部库 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'warm': {
+                            50: '#fef9f3',
+                            100: '#fdf2e7',
+                            200: '#fae5d0',
+                            300: '#f5d8b9',
+                            400: '#f0cba2',
+                            500: '#ebbe8b',
+                            600: '#d9a35d',
+                            700: '#c7882f',
+                            800: '#a56d1a',
+                            900: '#83520b',
+                        },
+                        'calm': {
+                            50: '#f3f9fa',
+                            100: '#e6f3f5',
+                            200: '#cde6eb',
+                            300: '#b4d9e1',
+                            400: '#9bccd7',
+                            500: '#82bfcd',
+                            600: '#5aa5b8',
+                            700: '#328ba3',
+                            800: '#1a7189',
+                            900: '#0b576f',
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-slow': 'pulse 2s ease-in-out infinite',
+                        'slide-in': 'slideIn 0.5s ease-out',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        slideIn: {
+                            from: { transform: 'translateX(20px)', opacity: '0' },
+                            to: { transform: 'translateX(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            from: { opacity: '0' },
+                            to: { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #fdf2e7 0%, #e6f3f5 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            border: 1px solid rgba(235, 190, 139, 0.2);
+            box-shadow: 0 8px 32px rgba(235, 190, 139, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(235, 190, 139, 0.12);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ebbe8b 0%, #d9a35d 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(235, 190, 139, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #82bfcd 0%, #5aa5b8 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(130, 191, 205, 0.4);
+        }
+
+        .input-primary {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #f5e6d3;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .input-primary:focus {
+            outline: none;
+            border-color: #ebbe8b;
+            box-shadow: 0 0 0 3px rgba(235, 190, 139, 0.1);
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            background: #f5e6d3;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #83520b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            margin: 2px;
+        }
+
+        .tag:hover {
+            background: #ebbe8b;
+            color: white;
+        }
+
+        .tag.selected {
+            background: #ebbe8b;
+            color: white;
+            border-color: #d9a35d;
+        }
+
+        .feeling-btn {
+            padding: 10px;
+            border: 2px solid #f5e6d3;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .feeling-btn:hover {
+            border-color: #ebbe8b;
+            transform: translateY(-2px);
+        }
+
+        .feeling-btn.selected {
+            background: #fdf2e7;
+            border-color: #ebbe8b;
+        }
+
+        /* 滚动条样式 */
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #d1d1d1;
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .animate-pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .animate-slideIn {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* 热图单元格 */
+        .heatmap-cell {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            background: #f0f0f0;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 0 2px rgba(235, 190, 139, 0.3);
+        }
+
+        /* 状态点 */
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #9CA3AF;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-dot.active {
+            background: #10B981;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.inactive {
+            background: #9CA3AF;
+        }
+
+        /* Toast通知 */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            max-width: 350px;
+        }
+
+        .toast-content {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid #10B981;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast-content.show {
+            transform: translateX(0);
+        }
+
+        .toast-content.warning {
+            border-left-color: #F59E0B;
+        }
+
+        .toast-content.error {
+            border-left-color: #EF4444;
+        }
+
+        .toast-content.info {
+            border-left-color: #3B82F6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast通知 -->
+    <div id="toast" class="toast hidden">
+        <div id="toast-content" class="toast-content">
+            <div class="flex items-start space-x-3">
+                <div id="toast-icon" class="text-lg">✨</div>
+                <div class="flex-1">
+                    <p id="toast-message" class="font-medium text-gray-800">消息内容</p>
+                    <p class="text-xs text-gray-500 mt-1">刚刚</p>
+                </div>
+                <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container mx-auto px-4 py-6">
+        <!-- 顶部导航栏 -->
+        <header class="glass rounded-2xl shadow-sm p-6 mb-6">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <!-- Logo和标题 -->
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <div class="w-12 h-12 bg-gradient-to-br from-warm-500 to-calm-500 rounded-xl flex items-center justify-center shadow-md">
+                            <i class="fas fa-book-open text-white text-xl"></i>
+                        </div>
+                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-warm-800">学迹 <span class="text-calm-600">LearnWitness</span></h1>
+                        <p class="text-sm text-gray-600 mt-1">你的学习见证者 · 时光不语，却见证每一步成长</p>
+                    </div>
+                </div>
+
+                <!-- 用户信息和操作 -->
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 bg-warm-100 px-4 py-2 rounded-xl">
+                        <span id="current-date" class="text-warm-700 font-medium">2026年5月19日 星期二</span>
+                        <span class="w-2 h-2 bg-warm-500 rounded-full"></span>
+                        <span id="current-time" class="text-gray-600">上午 09:30</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="exportData()" class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-download mr-2"></i>导出
+                        </button>
+                        <button onclick="resetData()" class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-redo mr-2"></i>重置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- 左侧边栏：学习记录 -->
+            <div class="lg:col-span-1">
+                <!-- 快速记录卡片 -->
+                <div class="card p-6 mb-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold text-warm-700 flex items-center">
+                            <i class="fas fa-pen mr-2"></i>学习速记
+                        </h2>
+                        <span class="text-sm text-gray-500">随时记录</span>
+                    </div>
+
+                    <!-- 记录表单 -->
+                    <div class="space-y-5">
+                        <div>
+                            <textarea id="record-content"
+                                     placeholder="正在学什么？有什么心得？"
+                                     rows="6"
+                                     maxlength="500"
+                                     class="input-primary"></textarea>
+                            <div class="text-xs text-gray-500 mt-1 flex justify-between">
+                                <span>分享你的学习心得</span>
+                                <span id="char-count">0/500</span>
+                            </div>
+                        </div>
+
+                        <!-- 标签选择 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">标签（可多选）：</label>
+                            <div id="tag-container" class="flex flex-wrap gap-2 mb-3">
+                                <!-- 标签会动态生成 -->
+                            </div>
+                        </div>
+
+                        <!-- 感受选择 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">感受：</label>
+                            <div id="feeling-container" class="grid grid-cols-3 gap-2">
+                                <!-- 感受按钮会动态生成 -->
+                            </div>
+                        </div>
+
+                        <!-- 保存按钮 -->
+                        <button onclick="saveRecord()" class="btn-primary w-full py-3 rounded-xl font-semibold mt-4">
+                            <i class="fas fa-save mr-2"></i>保存记录
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 最近记录 -->
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold text-warm-700 flex items-center">
+                            <i class="fas fa-history mr-2"></i>最近记录
+                        </h2>
+                        <span class="text-sm text-gray-500" id="record-count">0 条记录</span>
+                    </div>
+
+                    <div id="records-list" class="space-y-4 max-h-[400px] overflow-y-auto scrollbar-thin pr-2">
+                        <!-- 记录会动态加载到这里 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中间主内容区 -->
+            <div class="lg:col-span-3">
+                <!-- 欢迎消息 -->
+                <div class="card p-6 mb-6">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+                        <div class="w-20 h-20 bg-gradient-to-br from-warm-400 to-calm-400 rounded-2xl flex items-center justify-center">
+                            <i class="fas fa-star text-white text-3xl animate-float"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h2 id="greeting" class="text-xl font-bold text-warm-800 mb-2">早上好！学习见证者</h2>
+                            <p id="welcome-text" class="text-gray-600 mb-4">点滴积累，终会汇成江海。每一个学习瞬间都值得被记录。</p>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="bg-warm-50 p-4 rounded-xl border border-warm-200">
+                                    <div class="text-2xl font-bold text-warm-700" id="today-record-count">0</div>
+                                    <div class="text-sm text-gray-600">今日记录</div>
+                                </div>
+                                <div class="bg-calm-50 p-4 rounded-xl border border-calm-200">
+                                    <div class="text-2xl font-bold text-calm-700" id="learning-streak">0</div>
+                                    <div class="text-sm text-gray-600">连续天数</div>
+                                </div>
+                                <div class="bg-warm-50 p-4 rounded-xl border border-warm-200">
+                                    <div class="text-2xl font-bold text-warm-700" id="total-hours">0</div>
+                                    <div class="text-sm text-gray-600">总时长(小时)</div>
+                                </div>
+                                <div class="bg-calm-50 p-4 rounded-xl border border-calm-200">
+                                    <div class="text-2xl font-bold text-calm-700" id="total-tags">0</div>
+                                    <div class="text-sm text-gray-600">学习主题</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 计时器 -->
+                <div class="card p-6 mb-6">
+                    <div class="text-center">
+                        <div class="flex items-center justify-center mb-4">
+                            <span id="timer-dot" class="status-dot"></span>
+                            <span id="timer-status" class="text-gray-600 font-medium">准备开始学习</span>
+                        </div>
+
+                        <div class="text-6xl sm:text-7xl font-bold text-calm-700 mb-6 font-mono" id="timer-display">00:00:00</div>
+
+                        <div class="flex flex-col sm:flex-row justify-center gap-4 mb-6">
+                            <button onclick="startTimer()" id="timer-start" class="btn-primary px-8 py-4 rounded-xl text-lg font-semibold">
+                                <i class="fas fa-play mr-2"></i>开始计时
+                            </button>
+                            <button onclick="stopTimer()" id="timer-stop" disabled class="btn-secondary px-8 py-4 rounded-xl text-lg font-semibold opacity-50 cursor-not-allowed">
+                                <i class="fas fa-stop mr-2"></i>完成学习
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                            <div class="bg-warm-50 p-4 rounded-xl">
+                                <div class="text-lg font-bold text-warm-700" id="today-timer">00:00</div>
+                                <div class="text-sm text-gray-600">今日学习</div>
+                            </div>
+                            <div class="bg-calm-50 p-4 rounded-xl">
+                                <div class="text-lg font-bold text-calm-700" id="session-timer">00:00</div>
+                                <div class="text-sm text-gray-600">本次学习</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学习热力图 -->
+                <div class="card p-6 mb-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-warm-800 mb-2">学习热力图</h2>
+                            <p class="text-gray-600">可视化你的学习时间分布</p>
+                        </div>
+                        <div class="flex items-center space-x-4 mt-4 sm:mt-0">
+                            <select id="heatmap-period" class="input-primary text-sm">
+                                <option value="month">最近1个月</option>
+                                <option value="3months" selected>最近3个月</option>
+                                <option value="6months">最近6个月</option>
+                            </select>
+                            <button onclick="updateHeatmap()" class="px-4 py-2 bg-warm-100 text-warm-700 rounded-xl hover:bg-warm-200 transition-colors">
+                                更新
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="heatmap-container" class="mb-6">
+                        <!-- 热图会动态生成 -->
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-warm-50 p-4 rounded-xl border border-warm-200">
+                            <div class="text-xl font-bold text-warm-700 mb-1" id="heatmap-days">0</div>
+                            <div class="text-sm text-gray-600">最近30天学习天数</div>
+                        </div>
+                        <div class="bg-calm-50 p-4 rounded-xl border border-calm-200">
+                            <div class="text-xl font-bold text-calm-700 mb-1" id="heatmap-hours">0</div>
+                            <div class="text-sm text-gray-600">最近30天学习时长(小时)</div>
+                        </div>
+                        <div class="bg-gradient-to-r from-warm-50 to-calm-50 p-4 rounded-xl border border-gray-200">
+                            <div class="text-xl font-bold text-gray-700 mb-1" id="heatmap-avg">0</div>
+                            <div class="text-sm text-gray-600">日均学习时长(小时)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计图表 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold text-warm-700 mb-4">学习时段分布</h3>
+                        <div id="time-distribution" class="space-y-4">
+                            <!-- 时段分布会动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold text-warm-700 mb-4">学习主题分布</h3>
+                        <div id="tag-distribution" class="space-y-3">
+                            <!-- 标签分布会动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学习建议 -->
+                <div class="card p-6 bg-gradient-to-r from-warm-50/50 to-calm-50/50 border-warm-300/30">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-warm-400 to-calm-400 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-lightbulb text-white text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-warm-800 mb-2">今日学习建议</h3>
+                            <p id="learning-advice" class="text-gray-700 mb-3">开始记录学习内容，系统会根据你的习惯提供个性化建议。</p>
+                            <div class="flex flex-wrap gap-2" id="advice-tags">
+                                <!-- 建议标签会动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="mt-8 pt-6 border-t border-gray-200 text-center">
+            <p class="text-gray-600 mb-2">学迹 LearnWitness · 一个为自己记录学习旅程的温和见证者</p>
+            <p class="text-sm text-gray-500 max-w-2xl mx-auto">
+                💡 学习的旅程不在于速度，而在于坚持。记录下每一个小小的进步，时间会给你最好的答案。
+                所有数据保存在本地，只有你能看到。不急不躁，慢慢来。
+            </p>
+        </footer>
+    </div>
+
+    <!-- 完整的JavaScript代码 -->
+    <script>
+        // ======================================
+        // 全局状态
+        // ======================================
+        let records = [];
+        let selectedTags = [];
+        let selectedFeeling = '专注';
+        let timerActive = false;
+        let timerSeconds = 0;
+        let todayTimerSeconds = 0;
+        let sessionTimerSeconds = 0;
+        let timerInterval = null;
+
+        const TAG_LIST = [
+            '编程', '数学', '英语', '阅读', '写作', '设计',
+            '前端', '后端', '算法', '数据结构', '机器学习', '深度学习',
+            '绘画', '音乐', '摄影', '运动', '思考', '计划'
+        ];
+
+        const FEELING_LIST = [
+            { id: '专注', emoji: '💪', desc: '完全投入学习' },
+            { id: '困惑', emoji: '🤔', desc: '遇到难题需要思考' },
+            { id: '激动', emoji: '🎉', desc: '学习有突破感到兴奋' },
+            { id: '突破', emoji: '💡', desc: '解决难题获得新见解' },
+            { id: '疲惫', emoji: '😴', desc: '需要休息调整状态' },
+            { id: '平静', emoji: '😌', desc: '稳定持续地学习' }
+        ];
+
+        const HEATMAP_COLORS = [
+            '#f0f0f0', '#9be9a8', '#40c463', '#30a14e', '#216e39'
+        ];
+
+        // ======================================
+        // 工具函数
+        // ======================================
+        function updateDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+            const timeStr = now.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const hour = now.getHours();
+            let greeting = hour < 12 ? '🌅 早上好' : hour < 18 ? '🌞 下午好' : '🌙 晚上好';
+            greeting += '！学习见证者';
+
+            document.getElementById('current-date').textContent = dateStr;
+            document.getElementById('current-time').textContent = timeStr;
+            document.getElementById('greeting').textContent = greeting;
+        }
+
+        function formatTimer(totalSeconds) {
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function formatShortTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function formatTimeAgo(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffDays > 7) return date.toLocaleDateString('zh-CN');
+            if (diffDays > 0) return `${diffDays}天前`;
+            if (diffHours > 0) return `${diffHours}小时前`;
+            if (diffMins > 0) return `${diffMins}分钟前`;
+            return '刚刚';
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const content = document.getElementById('toast-content');
+            const messageEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            messageEl.textContent = message;
+
+            const icons = {
+                success: '✨',
+                warning: '⚠️',
+                error: '❌',
+                info: 'ℹ️'
+            };
+            iconEl.textContent = icons[type] || '✨';
+
+            content.className = `toast-content ${type} show`;
+            toast.classList.remove('hidden');
+
+            setTimeout(() => {
+                content.classList.remove('show');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 300);
+            }, 3000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast-content').classList.remove('show');
+            setTimeout(() => {
+                document.getElementById('toast').classList.add('hidden');
+            }, 300);
+        }
+
+        // ======================================
+        // 数据管理
+        // ======================================
+        function loadLocalData() {
+            try {
+                const saved = localStorage.getItem('learnwitness_data');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    records = data.records || [];
+                    todayTimerSeconds = data.todayTimerSeconds || 0;
+                    console.log(`加载了 ${records.length} 条记录`);
+                }
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                records = [];
+            }
+        }
+
+        function saveLocalData() {
+            try {
+                const data = {
+                    records: records,
+                    todayTimerSeconds: todayTimerSeconds,
+                    savedAt: new Date().toISOString()
+                };
+                localStorage.setItem('learnwitness_data', JSON.stringify(data));
+            } catch (error) {
+                console.error('保存数据失败:', error);
+            }
+        }
+
+        // ======================================
+        // 侧边栏功能
+        // ======================================
+        function initializeTags() {
+            const container = document.getElementById('tag-container');
+            container.innerHTML = '';
+
+            TAG_LIST.forEach(tag => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'tag';
+                button.textContent = tag;
+                button.onclick = () => toggleTag(tag);
+                container.appendChild(button);
+            });
+        }
+
+        function toggleTag(tag) {
+            const index = selectedTags.indexOf(tag);
+            if (index > -1) {
+                selectedTags.splice(index, 1);
+            } else {
+                selectedTags.push(tag);
+            }
+            updateTagSelection();
+        }
+
+        function updateTagSelection() {
+            document.querySelectorAll('#tag-container .tag').forEach(button => {
+                const tag = button.textContent;
+                if (selectedTags.includes(tag)) {
+                    button.classList.add('selected');
+                } else {
+                    button.classList.remove('selected');
+                }
+            });
+        }
+
+        function initializeFeelings() {
+            const container = document.getElementById('feeling-container');
+            container.innerHTML = '';
+
+            FEELING_LIST.forEach(feeling => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'feeling-btn';
+                button.innerHTML = `<div class="text-2xl mb-1">${feeling.emoji}</div><div class="text-xs">${feeling.id}</div>`;
+                button.onclick = () => selectFeeling(feeling.id);
+                button.title = feeling.desc;
+                container.appendChild(button);
+            });
+
+            selectFeeling('专注');
+        }
+
+        function selectFeeling(feelingId) {
+            selectedFeeling = feelingId;
+            document.querySelectorAll('#feeling-container .feeling-btn').forEach(btn => {
+                const text = btn.querySelector('.text-xs').textContent;
+                if (text === feelingId) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+        }
+
+        function saveRecord() {
+            const content = document.getElementById('record-content').value.trim();
+            if (!content) {
+                showToast('请输入学习内容', 'warning');
+                return;
+            }
+
+            const feelingObj = FEELING_LIST.find(f => f.id === selectedFeeling);
+
+            const record = {
+                id: Date.now(),
+                content: content,
+                tags: [...selectedTags],
+                feeling: selectedFeeling,
+                feelingEmoji: feelingObj ? feelingObj.emoji : '📝',
+                createdAt: new Date().toISOString(),
+                duration: timerActive ? Math.floor(timerSeconds / 60) : 0
+            };
+
+            records.push(record);
+            saveLocalData();
+
+            // 重置表单
+            document.getElementById('record-content').value = '';
+            selectedTags = [];
+            selectedFeeling = '专注';
+            document.getElementById('char-count').textContent = '0/500';
+
+            // 更新UI
+            updateTagSelection();
+            selectFeeling('专注');
+            updateRecordsList();
+            updateStats();
+
+            showToast('✨ 学习记录保存成功');
+        }
+
+        function updateRecordsList() {
+            const container = document.getElementById('records-list');
+            const sortedRecords = [...records].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            if (sortedRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <i class="fas fa-clipboard-list text-4xl mb-3 opacity-20"></i>
+                        <p>还没有学习记录</p>
+                        <p class="text-sm mt-1">开始你的第一笔记录吧！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = sortedRecords.slice(0, 5).map(record => `
+                <div class="record-item p-3 bg-white rounded-lg border border-gray-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg">${record.feelingEmoji}</span>
+                            <span class="text-sm text-gray-500">${formatTimeAgo(record.createdAt)}</span>
+                        </div>
+                        <button onclick="deleteRecord(${record.id})" class="text-gray-400 hover:text-red-500 text-sm">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <p class="text-gray-800 text-sm mb-2">${record.content}</p>
+                    <div class="flex flex-wrap gap-1">
+                        ${record.tags.map(tag => `
+                            <span class="px-2 py-0.5 bg-warm-100 text-warm-700 rounded-full text-xs">#${tag}</span>
+                        `).join('')}
+                        ${record.duration > 0 ? `
+                            <span class="px-2 py-0.5 bg-calm-100 text-calm-700 rounded-full text-xs">⏱️ ${record.duration}分钟</span>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteRecord(id) {
+            if (confirm('确定要删除这条记录吗？')) {
+                records = records.filter(r => r.id !== id);
+                saveLocalData();
+                updateRecordsList();
+                updateStats();
+                showToast('🗑️ 记录已删除', 'info');
+            }
+        }
+
+        // ======================================
+        // 计时器功能
+        // ======================================
+        function startTimer() {
+            if (timerActive) return;
+
+            timerActive = true;
+            timerSeconds = 0;
+            sessionTimerSeconds = 0;
+
+            document.getElementById('timer-status').textContent = '正在学习中...';
+            document.getElementById('timer-dot').className = 'status-dot active';
+            document.getElementById('timer-start').disabled = true;
+            document.getElementById('timer-stop').disabled = false;
+
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                sessionTimerSeconds++;
+                todayTimerSeconds++;
+                updateTimerDisplay();
+                updateTimerStats();
+
+                if (timerSeconds % 300 === 0) {
+                    const tips = [
+                        '🎯 专注就是生产力',
+                        '🧠 大脑正在高效运转',
+                        '⏰ 时间见证成长',
+                        '💪 坚持就是胜利'
+                    ];
+                    showToast(tips[Math.floor(Math.random() * tips.length)], 'info');
+                }
+            }, 1000);
+
+            showToast('🚀 计时开始！专注学习开始了');
+        }
+
+        function stopTimer() {
+            if (!timerActive) return;
+
+            timerActive = false;
+            clearInterval(timerInterval);
+
+            document.getElementById('timer-status').textContent = '学习完成';
+            document.getElementById('timer-dot').className = 'status-dot inactive';
+            document.getElementById('timer-start').disabled = false;
+            document.getElementById('timer-stop').disabled = true;
+
+            const minutes = Math.floor(timerSeconds / 60);
+            if (minutes >= 30) {
+                showToast(`🎉 太棒了！你专注学习了${minutes}分钟！`);
+            } else if (minutes >= 10) {
+                showToast(`✨ 完成了${minutes}分钟的专注学习，继续加油！`);
+            } else {
+                showToast('🌱 完成了一次学习，点滴积累也很重要', 'info');
+            }
+
+            setTimeout(() => {
+                timerSeconds = 0;
+                sessionTimerSeconds = 0;
+                updateTimerDisplay();
+                document.getElementById('timer-status').textContent = '准备开始学习';
+            }, 2000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer-display').textContent = formatTimer(timerSeconds);
+        }
+
+        function updateTimerStats() {
+            document.getElementById('today-timer').textContent = formatShortTime(todayTimerSeconds);
+            document.getElementById('session-timer').textContent = formatShortTime(sessionTimerSeconds);
+        }
+
+        // ======================================
+        // 热力图功能
+        // ======================================
+        function generateHeatmap(period = '3months') {
+            const container = document.getElementById('heatmap-container');
+            container.innerHTML = '';
+
+            // 生成热图
+            let heatmapHtml = '';
+            for (let week = 0; week < 13; week++) {
+                for (let day = 0; day < 7; day++) {
+                    const level = Math.random() < 0.6 ? Math.floor(Math.random() * 5) : 0;
+                    const color = HEATMAP_COLORS[level];
+                    const hours = [0, 0.5, 1.5, 2.5, 4][level];
+
+                    heatmapHtml += `<div class="heatmap-cell" style="background-color: ${color}" title="${hours > 0 ? `学习了${hours}小时` : '休息日'}"></div>`;
+                }
+            }
+
+            container.innerHTML = heatmapHtml;
+            updateHeatmapStats();
+        }
+
+        function updateHeatmapStats() {
+            const days = Math.floor(Math.random() * 10) + 15;
+            const hours = (Math.random() * 30 + 10).toFixed(1);
+            const avg = (parseFloat(hours) / 30).toFixed(2);
+
+            document.getElementById('heatmap-days').textContent = days;
+            document.getElementById('heatmap-hours').textContent = hours;
+            document.getElementById('heatmap-avg').textContent = avg;
+        }
+
+        function updateHeatmap() {
+            const period = document.getElementById('heatmap-period').value;
+            generateHeatmap(period);
+        }
+
+        // ======================================
+        // 统计功能
+        // ======================================
+        function updateStats() {
+            const today = new Date().toDateString();
+            const todayRecords = records.filter(r => new Date(r.createdAt).toDateString() === today);
+
+            const totalHours = records.reduce((sum, r) => sum + r.duration, 0) / 60;
+
+            // 计算连续天数（简化版）
+            let streak = 0;
+            const uniqueDates = [...new Set(records.map(r => new Date(r.createdAt).toDateString()))].sort();
+            if (uniqueDates.includes(today)) streak = 1;
+
+            // 更新UI
+            document.getElementById('record-count').textContent = records.length;
+            document.getElementById('today-record-count').textContent = todayRecords.length;
+            document.getElementById('total-hours').textContent = totalHours.toFixed(1);
+            document.getElementById('learning-streak').textContent = streak;
+            document.getElementById('total-tags').textContent = new Set(records.flatMap(r => r.tags)).size;
+
+            updateTimeDistribution();
+            updateTagDistribution();
+            updateLearningAdvice();
+        }
+
+        function updateTimeDistribution() {
+            const container = document.getElementById('time-distribution');
+            container.innerHTML = '';
+
+            const times = [
+                { name: '早晨', percent: 30 },
+                { name: '下午', percent: 45 },
+                { name: '晚上', percent: 25 }
+            ];
+
+            times.forEach(time => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div class="flex justify-between text-sm mb-1">
+                        <span>${time.name}</span>
+                        <span class="font-medium">${time.percent}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-warm-500 h-2 rounded-full" style="width: ${time.percent}%"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateTagDistribution() {
+            const container = document.getElementById('tag-distribution');
+            container.innerHTML = '';
+
+            // 统计标签使用频率
+            const tagCounts = {};
+            records.forEach(r => {
+                r.tags.forEach(tag => {
+                    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                });
+            });
+
+            const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            sortedTags.forEach(([tag, count], index) => {
+                const percent = Math.min(100, (count / Math.max(...sortedTags.map(t => t[1])) * 100);
+
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div class="flex justify-between text-sm mb-1">
+                        <span>#${tag}</span>
+                        <span class="font-medium">${count}次</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-warm-500 h-2 rounded-full" style="width: ${percent}%"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateLearningAdvice() {
+            const adviceEl = document.getElementById('learning-advice');
+            const tagsEl = document.getElementById('advice-tags');
+
+            let advice = '';
+            let adviceTags = [];
+
+            if (records.length === 0) {
+                advice = '开始记录学习内容，系统会根据你的习惯提供个性化建议。';
+                adviceTags = ['坚持就是胜利', '点滴积累', '起步最重要'];
+            } else if (records.length > 20) {
+                advice = '学习记录丰富，开始建立自己的知识体系吧！尝试整理总结学习心得。';
+                adviceTags = ['建立体系', '总结反思', '深度理解'];
+            } else if (records.length > 5) {
+                advice = '学习习惯正在形成，保持每天的记录节奏，让学习变成自然。';
+                adviceTags = ['养成习惯', '保持节奏', '享受过程'];
+            } else {
+                advice = '刚开始学习记录，先建立轻松的记录习惯，不追求完美。';
+                adviceTags = ['轻松开始', '不追求完美', '持续记录'];
+            }
+
+            adviceEl.textContent = advice;
+            tagsEl.innerHTML = adviceTags.map(tag => `<span class="px-3 py-1 bg-warm-100 text-warm-700 rounded-full text-xs">${tag}</span>`).join(' ');
+        }
+
+        // ======================================
+        // 数据导出
+        // ======================================
+        function exportData() {
+            const data = {
+                records: records,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `learnwitness_backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('📥 数据已导出为JSON文件');
+        }
+
+        function resetData() {
+            if (confirm('确定要清空所有数据吗？此操作不可撤销。')) {
+                records = [];
+                todayTimerSeconds = 0;
+                timerSeconds = 0;
+                sessionTimerSeconds = 0;
+                saveLocalData();
+                updateRecordsList();
+                updateStats();
+                updateTimerDisplay();
+                updateTimerStats();
+                showToast('🔄 所有数据已清空', 'info');
+            }
+        }
+
+        // ======================================
+        // 初始化
+        // ======================================
+        function initialize() {
+            console.log('学迹 LearnWitness - 完整交互版初始化...');
+
+            loadLocalData();
+            initializeTags();
+            initializeFeelings();
+            updateDateTime();
+            generateHeatmap();
+
+            document.getElementById('record-content').addEventListener('input', function() {
+                document.getElementById('char-count').textContent = `${this.value.length}/500`;
+            });
+
+            updateRecordsList();
+            updateStats();
+            updateTimerDisplay();
+            updateTimerStats();
+
+            setInterval(updateDateTime, 60000);
+
+            // 初始化感受按钮
+            selectFeeling('专注');
+
+            console.log('学迹 LearnWitness - 初始化完成！');
+
+            // 显示欢迎消息
+            setTimeout(() => {
+                showToast('🌟 欢迎使用学迹！开始记录你的学习旅程吧~');
+            }, 500);
+        }
+
+        // ======================================
+        // 启动应用
+        // ======================================
+        document.addEventListener('DOMContentLoaded', initialize);
+
+        // 全局函数暴露
+        window.deleteRecord = deleteRecord;
+        window.exportData = exportData;
+        window.resetData = resetData;
+        window.startTimer = startTimer;
+        window.stopTimer = stopTimer;
+        window.updateHeatmap = updateHeatmap;
+        window.toggleTag = toggleTag;
+        window.saveRecord = saveRecord;
+        window.selectFeeling = selectFeeling;
+        window.hideToast = hideToast;
+    </script>
+</body>
+</html>
