@@ -331,17 +331,25 @@ export default function ExamPage() {
             </div>
           </div>
 
-          {/* Notation scroll placeholder */}
-          <div className="rounded-card bg-white p-4">
+          {/* Notation scroll with highlight */}
+          <div className="rounded-card bg-white p-4 overflow-hidden">
             <p className="text-xs text-text-muted mb-2">简谱预览</p>
-            <div className="flex gap-2 text-text-muted text-sm">
-              <span className="text-coral font-bold">♩ ♩ ♩ ♩</span>
-              <span>|</span>
-              <span>♩ ♩ ♩ ♩</span>
-              <span>|</span>
-              <span className="bg-pink-soft rounded px-1">♩ ♪ ♪ ♩</span>
-              <span>|</span>
-              <span>♩ ♩ ♩ ♩</span>
+            <div className="flex gap-0 text-sm overflow-x-auto whitespace-nowrap scrollbar-hide">
+              {MEASURES.map((measure, i) => (
+                <span
+                  key={i}
+                  className={`flex items-center gap-0 transition-all duration-300 ${
+                    i === activeMeasure && phase === 'singing'
+                      ? 'bg-coral/15 text-coral font-bold scale-110 rounded px-2 py-0.5'
+                      : 'text-text-muted px-1'
+                  }`}
+                >
+                  {measure}
+                  {i < MEASURES.length - 1 && (
+                    <span className="text-gray-300 mx-0.5">|</span>
+                  )}
+                </span>
+              ))}
             </div>
           </div>
         </div>
