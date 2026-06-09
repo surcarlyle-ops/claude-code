@@ -53,7 +53,10 @@ export default function ResultPage() {
           <ArrowLeft size={20} />
           <span className="text-sm">返回选曲</span>
         </button>
-        <h1 className="text-[24px] font-bold text-text-main">考试结果</h1>
+        <div className="text-center">
+          <h1 className="text-[24px] font-bold text-text-main">考试结果</h1>
+          {studentName && <p className="text-sm text-text-muted">{studentName}</p>}
+        </div>
         <div className="w-16" />
       </div>
 

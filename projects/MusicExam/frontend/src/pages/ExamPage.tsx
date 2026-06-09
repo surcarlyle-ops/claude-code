@@ -19,7 +19,7 @@ export default function ExamPage() {
   const [phase, setPhase] = useState<'ready' | 'countdown' | 'singing' | 'submitting' | 'done'>('ready')
   const [countdown, setCountdown] = useState(3)
   const [elapsed, setElapsed] = useState(0)
-  const [faceLost, setFaceLost] = useState(false)
+  const [faceLost] = useState(false)
   const [pitchScore, setPitchScore] = useState(0)
   const [rhythmScore, setRhythmScore] = useState(0)
   const [error, setError] = useState('')
