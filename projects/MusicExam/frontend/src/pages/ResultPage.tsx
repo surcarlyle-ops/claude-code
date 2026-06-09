@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from '@phosphor-icons/react'
+import { ArrowLeft, ArrowCounterClockwise, MusicNote } from '@phosphor-icons/react'
 import { type ExamResult } from '../services/api'
 
 export default function ResultPage() {
@@ -12,6 +12,15 @@ export default function ResultPage() {
       return raw ? JSON.parse(raw) : null
     } catch {
       return null
+    }
+  })()
+
+  const studentName: string = (() => {
+    try {
+      const s = JSON.parse(sessionStorage.getItem('student') ?? '{}')
+      return s.name ?? ''
+    } catch {
+      return ''
     }
   })()
 
@@ -83,6 +92,68 @@ export default function ResultPage() {
             />
           </div>
         </div>
+      </div>
+
+      {/* Error markers */}
+      {result.errors && result.errors.length > 0 && (
+        <div className="rounded-card bg-yellow-cream p-5 mb-6">
+          <h2 className="font-semibold text-text-main mb-3 flex items-center gap-2">
+            🔍 错误小节
+          </h2>
+          <ul className="space-y-2">
+            {result.errors.map((err, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-2 text-sm"
+              >
+                <span className="font-mono font-semibold text-coral flex-shrink-0">
+                  小节 {err.bar}
+                </span>
+                <span className={err.type === 'pitch' ? 'text-coral' : 'text-teal-mint'}>
+                  {err.type === 'pitch' ? '🎯' : '🥁'}
+                </span>
+                <span className="text-text-main">{err.detail}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Suggestions */}
+      {result.suggestions && result.suggestions.length > 0 && (
+        <div className="rounded-card bg-purple-lavender p-5 mb-6">
+          <h2 className="font-semibold text-text-main mb-3 flex items-center gap-2">
+            💡 改进建议
+          </h2>
+          <ul className="space-y-2">
+            {result.suggestions.map((s, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-text-main">
+                <span className="text-coral flex-shrink-0">•</span>
+                <span>{s}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Action buttons */}
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => navigate('/exam')}
+          className="flex-1 py-3 rounded-btn bg-coral text-white font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5"
+        >
+          <ArrowCounterClockwise size={18} />
+          再唱一次
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/songs')}
+          className="flex-1 py-3 rounded-btn bg-white border border-gray-200 text-text-main font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
+        >
+          <MusicNote size={18} />
+          换一首
+        </button>
       </div>
     </div>
   )
