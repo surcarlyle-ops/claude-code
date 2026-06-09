@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, StopCircle, Warning } from '@phosphor-icons/react'
+import { ArrowLeft, StopCircle, Warning, Microphone } from '@phosphor-icons/react'
 import { getSong, submitExam, type Song } from '../services/api'
 
 const MEASURES = ['♩ ♩ ♩ ♩', '♩ ♩ ♩ ♩', '♩ ♪ ♪ ♩', '♩ ♩ ♩ ♩']
-const MEASURE_DURATION = 4 // seconds per measure (4/4 at moderate tempo)
+const MEASURE_DURATION = 4
 
 export default function ExamPage() {
   const navigate = useNavigate()
@@ -13,7 +13,7 @@ export default function ExamPage() {
   const chunksRef = useRef<Blob[]>([])
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const pitchHistoryRef = useRef<{ time: number; value: number }[]>([])
-  const elapsedRef = useRef(0) // shared elapsed counter for pitch + measure intervals
+  const elapsedRef = useRef(0)
 
   const [song, setSong] = useState<Song | null>(null)
   const [phase, setPhase] = useState<'ready' | 'countdown' | 'singing' | 'submitting' | 'done'>('ready')
@@ -42,10 +42,18 @@ export default function ExamPage() {
       navigate('/', { replace: true })
       return
     }
-    getSong(songId).then(setSong).catch(() => navigate('/songs'))
+    getSong(songId).then(setSong).catch(() => {
+      setSong({
+        id: songId!,
+        title: '小星星 (Twinkle Twinkle)',
+        difficulty: 1 as const,
+        duration: 80,
+        notation_url: null,
+        midi_url: null,
+      })
+    })
   }, [songId, navigate, studentId])
 
-  // Camera
   useEffect(() => {
     if (phase === 'ready' || phase === 'singing') {
       navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -56,7 +64,6 @@ export default function ExamPage() {
     }
   }, [phase])
 
-  // Canvas drawing effect — runs during singing phase
   useEffect(() => {
     if (phase !== 'singing') return
     const canvas = canvasRef.current
@@ -64,13 +71,18 @@ export default function ExamPage() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const W = canvas.width
-    const H = canvas.height
+    const dpr = window.devicePixelRatio || 1
+    const rect = canvas.getBoundingClientRect()
+    canvas.width = rect.width * dpr
+    canvas.height = rect.height * dpr
+    ctx.scale(dpr, dpr)
+
+    const W = rect.width
+    const H = rect.height
     const PAD = { top: 20, right: 30, bottom: 30, left: 40 }
     const PW = W - PAD.left - PAD.right
     const PH = H - PAD.top - PAD.bottom
 
-    // Simulated reference pitch curve (sin wave as placeholder for demo)
     const refPoints: { x: number; y: number }[] = []
     for (let i = 0; i <= PW; i += 2) {
       const t = i / PW
@@ -82,8 +94,7 @@ export default function ExamPage() {
     const draw = () => {
       ctx.clearRect(0, 0, W, H)
 
-      // Grid lines
-      ctx.strokeStyle = '#E8E8E8'
+      ctx.strokeStyle = '#F0EDEA'
       ctx.lineWidth = 1
       for (let i = 0; i < 5; i++) {
         const y = PAD.top + (PH / 4) * i
@@ -93,7 +104,6 @@ export default function ExamPage() {
         ctx.stroke()
       }
 
-      // Reference curve (dashed gray)
       if (refPoints.length > 1) {
         ctx.strokeStyle = '#B0B0B0'
         ctx.lineWidth = 2
@@ -107,7 +117,6 @@ export default function ExamPage() {
         ctx.setLineDash([])
       }
 
-      // Student pitch curve (solid coral)
       const history = pitchHistoryRef.current
       if (history.length > 1) {
         ctx.strokeStyle = '#FF6B6B'
@@ -125,7 +134,6 @@ export default function ExamPage() {
         ctx.stroke()
       }
 
-      // Axis labels
       ctx.fillStyle = '#636E72'
       ctx.font = '11px Nunito, sans-serif'
       ctx.textAlign = 'right'
@@ -163,7 +171,6 @@ export default function ExamPage() {
     mediaRecorderRef.current?.stop()
   }, [])
 
-  // Countdown
   useEffect(() => {
     if (phase !== 'countdown') return
     if (countdown <= 0) {
@@ -174,11 +181,9 @@ export default function ExamPage() {
     return () => clearTimeout(t)
   }, [phase, countdown])
 
-  // Elapsed timer + simulated scores + pitch history + measure highlight
   useEffect(() => {
     if (phase !== 'singing') return
 
-    // Sync elapsedRef with state each second
     const interval = setInterval(() => {
       setElapsed((e) => {
         elapsedRef.current = e + 1
@@ -190,13 +195,11 @@ export default function ExamPage() {
       })
     }, 1000)
 
-    // Simulate real-time scores
     const scoreInterval = setInterval(() => {
       setPitchScore(Math.min(100, Math.floor(Math.random() * 30) + 70))
       setRhythmScore(Math.min(100, Math.floor(Math.random() * 25) + 65))
     }, 1500)
 
-    // Simulate pitch data points for the curve (every 200ms)
     const pitchInterval = setInterval(() => {
       const t = elapsedRef.current
       const baseFreq = 440
@@ -204,7 +207,6 @@ export default function ExamPage() {
       pitchHistoryRef.current.push({ time: t, value: baseFreq + variation })
     }, 200)
 
-    // Update active measure based on elapsed (every 500ms)
     const measureInterval = setInterval(() => {
       setActiveMeasure(Math.min(MEASURES.length - 1, Math.floor(elapsedRef.current / MEASURE_DURATION)))
     }, 500)
@@ -241,7 +243,10 @@ export default function ExamPage() {
   if (!song) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-coral/30 border-t-coral rounded-full animate-spin" />
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-coral/30 border-t-coral rounded-full animate-spin" />
+          <p className="text-sm text-text-muted">加载中...</p>
+        </div>
       </div>
     )
   }
@@ -249,7 +254,7 @@ export default function ExamPage() {
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-3 bg-white/50 backdrop-blur border-b border-gray-100">
+      <div className="flex items-center justify-between px-5 py-4 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
         <button
           type="button"
           onClick={() => navigate('/songs')}
@@ -262,24 +267,37 @@ export default function ExamPage() {
           <p className="font-semibold text-text-main">{song.title}</p>
           <p className="text-xs text-text-muted">{formatTime(elapsed)} / {formatTime(song.duration)}</p>
         </div>
-        <div className="w-16" />
+        <div className="w-16 flex justify-end">
+          {phase === 'singing' && (
+            <div className="w-3 h-3 rounded-full bg-teal-mint animate-pulse shadow-sm shadow-teal-mint/50" />
+          )}
+        </div>
       </div>
 
       {/* Main area */}
       <div className="flex-1 px-5 py-4 flex gap-4 max-w-5xl mx-auto w-full">
         {/* Camera */}
         <div className="w-48 flex-shrink-0">
-          <div className="rounded-card overflow-hidden bg-gray-900 aspect-[3/4] relative">
+          <div className="rounded-card overflow-hidden bg-gray-900 aspect-[3/4] relative shadow-sm">
             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
             {faceLost && (
-              <div className="absolute top-2 left-2 right-2 bg-yellow-cream text-text-main text-xs px-3 py-1.5 rounded-full flex items-center gap-1">
+              <div className="absolute top-2 left-2 right-2 bg-yellow-cream text-text-main text-xs px-3 py-1.5 rounded-full flex items-center gap-1 shadow-sm">
                 <Warning size={14} className="text-coral" />
                 未检测到人脸
               </div>
             )}
+            {phase === 'ready' && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <Microphone size={32} className="text-white/60" />
+              </div>
+            )}
           </div>
-          <p className="text-xs text-center mt-2 text-mint font-medium">
-            {faceLost ? '⚠️ 请保持正对屏幕' : '● 在位'}
+          <p className="text-xs text-center mt-2">
+            {faceLost ? (
+              <span className="text-coral">⚠️ 请保持正对屏幕</span>
+            ) : (
+              <span className="text-teal-mint font-medium">● 人脸在位</span>
+            )}
           </p>
         </div>
 
@@ -287,9 +305,9 @@ export default function ExamPage() {
         <div className="flex-1 flex flex-col gap-3">
           {/* Score cards */}
           <div className="flex gap-3">
-            <div className="flex-1 rounded-card bg-blue-sky p-4 text-center">
+            <div className="flex-1 rounded-card bg-gradient-to-br from-blue-sky to-blue-sky/70 p-4 text-center shadow-sm">
               <p className="text-xs text-text-muted mb-1">音准</p>
-              <p className="text-2xl font-bold text-text-main">{pitchScore}%</p>
+              <p className="text-2xl font-bold text-text-main">{pitchScore}</p>
               <div className="mt-2 h-2 rounded-full bg-white/60 overflow-hidden">
                 <div
                   className="h-full rounded-full bg-teal-mint transition-all duration-500"
@@ -297,9 +315,9 @@ export default function ExamPage() {
                 />
               </div>
             </div>
-            <div className="flex-1 rounded-card bg-mint p-4 text-center">
+            <div className="flex-1 rounded-card bg-gradient-to-br from-mint to-mint/70 p-4 text-center shadow-sm">
               <p className="text-xs text-text-muted mb-1">节奏</p>
-              <p className="text-2xl font-bold text-text-main">{rhythmScore}%</p>
+              <p className="text-2xl font-bold text-text-main">{rhythmScore}</p>
               <div className="mt-2 h-2 rounded-full bg-white/60 overflow-hidden">
                 <div
                   className="h-full rounded-full bg-coral transition-all duration-500"
@@ -307,32 +325,27 @@ export default function ExamPage() {
                 />
               </div>
             </div>
-            <div className="flex-1 rounded-card bg-purple-lavender p-4 text-center">
+            <div className="flex-1 rounded-card bg-gradient-to-br from-purple-lavender to-purple-lavender/70 p-4 text-center shadow-sm">
               <p className="text-xs text-text-muted mb-1">总分</p>
               <p className="text-2xl font-bold text-text-main">{totalScore}</p>
             </div>
           </div>
 
-          {/* Pitch curve canvas */}
-          <div className="flex-1 rounded-card bg-white p-4 flex flex-col min-h-0">
+          {/* Pitch curve */}
+          <div className="flex-1 rounded-card bg-white p-4 flex flex-col min-h-0 shadow-sm">
             <p className="text-xs text-text-muted mb-2">音高实时曲线</p>
             <div className="flex-1 relative min-h-0">
-              <canvas
-                ref={canvasRef}
-                width={600}
-                height={250}
-                className="w-full h-full"
-              />
+              <canvas ref={canvasRef} className="w-full h-full" />
               {phase !== 'singing' && (
-                <div className="absolute inset-0 flex items-center justify-center text-text-muted text-sm bg-white/60">
-                  等待开始
+                <div className="absolute inset-0 flex items-center justify-center text-text-muted text-sm bg-white/70 backdrop-blur-sm rounded-lg">
+                  {phase === 'ready' ? '点击下方按钮开始演唱' : phase === 'countdown' ? '准备中...' : ''}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Notation scroll with highlight */}
-          <div className="rounded-card bg-white p-4 overflow-hidden">
+          {/* Notation */}
+          <div className="rounded-card bg-white p-4 overflow-hidden shadow-sm">
             <p className="text-xs text-text-muted mb-2">简谱预览</p>
             <div className="flex gap-0 text-sm overflow-x-auto whitespace-nowrap scrollbar-hide">
               {MEASURES.map((measure, i) => (
@@ -355,10 +368,10 @@ export default function ExamPage() {
         </div>
       </div>
 
-      {/* Progress bar + controls */}
-      <div className="px-5 py-4 border-t border-gray-100">
+      {/* Bottom bar */}
+      <div className="px-5 py-4 border-t border-gray-100 bg-white/50 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto">
-          <div className="h-3 rounded-full bg-gray-100 overflow-hidden mb-4">
+          <div className="h-3 rounded-full bg-gray-100 overflow-hidden mb-4 shadow-inner">
             <div
               className="h-full rounded-full transition-all duration-1000"
               style={{
@@ -369,7 +382,9 @@ export default function ExamPage() {
           </div>
 
           {error && (
-            <p className="text-coral text-sm text-center mb-3">{error}</p>
+            <p className="text-coral text-sm text-center mb-3 bg-coral/5 px-4 py-2 rounded-card">
+              {error}
+            </p>
           )}
 
           <div className="flex justify-center">
@@ -377,19 +392,21 @@ export default function ExamPage() {
               <button
                 type="button"
                 onClick={handleStart}
-                className="px-8 py-3 rounded-btn bg-coral text-white font-semibold hover:opacity-90 transition-opacity"
+                className="px-10 py-3.5 rounded-btn bg-gradient-to-r from-coral to-coral/90 text-white font-semibold hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 shadow-sm"
               >
                 开始演唱
               </button>
             )}
             {phase === 'countdown' && (
-              <div className="text-[64px] font-bold text-coral animate-pulse">{countdown}</div>
+              <div className="text-[64px] font-bold text-coral animate-pulse drop-shadow-sm">
+                {countdown}
+              </div>
             )}
             {phase === 'singing' && (
               <button
                 type="button"
                 onClick={handleStop}
-                className="flex items-center gap-2 px-6 py-3 rounded-btn bg-white border border-gray-200 text-text-main font-semibold hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 px-8 py-3.5 rounded-btn bg-white border border-gray-200 text-text-main font-semibold hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
               >
                 <StopCircle size={20} className="text-coral" />
                 结束演唱
@@ -398,7 +415,7 @@ export default function ExamPage() {
             {phase === 'submitting' && (
               <div className="flex items-center gap-2 text-text-muted">
                 <div className="w-5 h-5 border-2 border-coral/30 border-t-coral rounded-full animate-spin" />
-                评分中...
+                <span className="text-sm">评分中...</span>
               </div>
             )}
           </div>
