@@ -1,0 +1,80 @@
+<h2>UI 参考分析（修正版）</h2>
+<p class="subtitle">基于桌面 "UI 参考" 文件夹的两张参考图</p>
+
+<div class="section">
+<h3>整体风格</h3>
+<ul>
+  <li><strong>明亮清新</strong> — 白底为主，干净通透</li>
+  <li><strong>现代极简</strong> — 大留白，低视觉密度</li>
+  <li><strong>卡片式布局</strong> — 内容模块化，圆角卡片 + 轻阴影</li>
+  <li><strong>活力点缀色</strong> — 白底上用珊瑚粉/青蓝/紫色做点缀</li>
+</ul>
+</div>
+
+<div class="section">
+<h3>字体 & 排版</h3>
+<ul>
+  <li>无衬线体（类似 Inter / SF Pro），干净现代</li>
+  <li>字号层级对比清晰：标题 Bold，正文 Regular</li>
+  <li>行距宽松，有充足呼吸感</li>
+  <li>字重使用克制，不滥用粗体</li>
+</ul>
+</div>
+
+<div class="section">
+<h3>颜色系统（这才是正确的）</h3>
+<ul>
+  <li><strong>底色：</strong>白色或极浅灰 #FAFAFA</li>
+  <li><strong>卡片：</strong>纯白 #FFFFFF + 微弱阴影</li>
+  <li><strong>主文字：</strong>深灰 #1A1A2E 或 #333333</li>
+  <li><strong>点缀色：</strong>珊瑚粉 #FF6B6B、青蓝 #4ECDC4、紫色 #7C3AED</li>
+  <li><strong>次要文字：</strong>中灰色 #888888 或 #999999</li>
+</ul>
+</div>
+
+<div class="section">
+<h3>组件 & 线条</h3>
+<ul>
+  <li><strong>圆角：</strong>卡片 12-16px，按钮 8-12px</li>
+  <li><strong>阴影：</strong>轻阴影，不夸张</li>
+  <li><strong>描边：</strong>几乎不描边，靠阴影和背景色区分</li>
+  <li><strong>图标：</strong>线条风格，颜色与点缀色一致</li>
+</ul>
+</div>
+
+<div class="section">
+<h3=>应用到 MusicExam 的修正方案</h3>
+<table style="width:100%;border-collapse:collapse;">
+  <tr style="border-bottom:1px solid #ddd;">
+    <td style="padding:8px 4px;font-weight:bold;">底色</td>
+    <td style="padding:8px 4px;">#FAFAFA 或 #FFFFFF</td>
+  </tr>
+  <tr style="border-bottom:1px solid #ddd;">
+    <td style="padding:8px 4px;font-weight:bold;">卡片</td>
+    <td style="padding:8px 4px;">纯白 + 轻阴影 (box-shadow: 0 2px 8px rgba(0,0,0,0.06))</td>
+  </tr>
+  <tr style="border-bottom:1px solid #ddd;">
+    <td style="padding:8px 4px;font-weight:bold;">点缀色</td>
+    <td style="padding:8px 4px;">#FF6B6B (珊瑚红)、#4ECDC4 (青蓝)、#7C3AED (紫色)</td>
+  </tr>
+  <tr style="border-bottom:1px solid #ddd;">
+    <td style="padding:8px 4px;font-weight:bold;">字体</td>
+    <td style="padding:8px 4px;">Inter 或 SF Pro — 无衬线，现代干净</td>
+  </tr>
+  <tr>
+    <td style="padding:8px 4px;font-weight:bold;">按钮风格</td>
+    <td style="padding:8px 4px;">纯色填充或 outline，圆角，无渐变</td>
+  </tr>
+</table>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="bright" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content">
+      <h3>明亮清新风 ✓</h3>
+      <p>白底 + 珊瑚粉/青蓝点缀，干净现代，符合参考图风格</p>
+      <span class="label" style="background:#e0f2e0;color:#2e7d32;">确认采用</span>
+    </div>
+  </div>
+</div>

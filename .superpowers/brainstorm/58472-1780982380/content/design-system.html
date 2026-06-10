@@ -1,0 +1,90 @@
+<h2>MusicExam 设计体系</h2>
+<p class="subtitle">由 UI/UX Pro Max 智能生成</p>
+
+<div class="section">
+<h3>推荐风格：Claymorphism（黏土风格）</h3>
+<ul>
+  <li>圆润、柔软、有触感的 UI 风格</li>
+  <li>多层阴影营造立体深度</li>
+  <li>大圆角 (border-radius 40-50)</li>
+  <li>按压时有弹性缩放反馈 (scale 0.92)</li>
+  <li>非常适合青少年和音乐教育场景 🎵</li>
+</ul>
+</div>
+
+<div class="section">
+<h3>颜色方案 — 2 个候选方案</h3>
+
+<h4>方案 A（推荐）：深色音乐风</h4>
+<div style="display:flex;gap:8px;margin-bottom:12px;">
+  <div style="width:32px;height:32px;border-radius:8px;background:#1E1B4B;border:1px solid #ccc;" title="Primary #1E1B4B"></div>
+  <div style="width:32px;height:32px;border-radius:8px;background:#4338CA;border:1px solid #ccc;" title="Secondary #4338CA"></div>
+  <div style="width:32px;height:32px;border-radius:8px;background:#22C55E;border:1px solid #ccc;" title="Accent #22C55E"></div>
+  <div style="width:32px;height:32px;border-radius:8px;background:#0F0F23;border:1px solid #ccc;" title="Background #0F0F23"></div>
+  <div style="width:32px;height:32px;border-radius:8px;background:#F8FAFC;border:1px solid #ccc;" title="Foreground #F8FAFC"></div>
+</div>
+<ul>
+  <li><strong>Primary:</strong> #1E1B4B 深靛蓝</li>
+  <li><strong>Accent:</strong> #22C55E 演奏绿（分数/进度指示）</li>
+  <li><strong>Background:</strong> #0F0F23 深空蓝</li>
+  <li><strong>感觉：</strong>音乐录音室的沉浸感，绿的用在分数上醒目</li>
+</ul>
+
+<h4>方案 B：暖色学习风</h4>
+<div style="display:flex;gap:8px;margin-bottom:12px;">
+  <div style="width:32px;height:32px;border-radius:8px;background:#DC2626;border:1px solid #ccc;" title="Primary #DC2626"></div>
+  <div style="width:32px;height:32px;border-radius:8px;background:#9A3412;border:1px solid #ccc;" title="Secondary #9A3412"></div>
+  <div style="width:32px;height:32px;border-radius:8px;background:#D97706;border:1px solid #ccc;" title="Accent #D97706"></div>
+  <div style="width:32px;height:32px;border-radius:8px;background:#FFFBEB;border:1px solid #ccc;" title="Background #FFFBEB"></div>
+  <div style="width:32px;height:32px;border-radius:8px;background:#0F172A;border:1px solid #ccc;" title="Foreground #0F172A"></div>
+</div>
+<ul>
+  <li><strong>Primary:</strong> #DC2626 音乐红</li>
+  <li><strong>Accent:</strong> #D97706 暖琥珀色</li>
+  <li><strong>Background:</strong> #FFFBEB 暖白底</li>
+  <li><strong>感觉：</strong>教室/课堂的温暖感，更像学习工具</li>
+</ul>
+</div>
+
+<div class="section">
+<h3>字体搭配</h3>
+<div style="display:flex;gap:24px;">
+  <div>
+    <p style="font-size:24px;font-weight:bold;margin:0;font-family:Georgia;">Righteous</p>
+    <p style="color:#888;font-size:12px;">标题字体 · 音乐感十足</p>
+  </div>
+  <div>
+    <p style="font-size:20px;margin:0;">Poppins</p>
+    <p style="color:#888;font-size:12px;">正文字体 · 清晰现代</p>
+  </div>
+</div>
+</div>
+
+<div class="section">
+<h3>交互效果</h3>
+<ul>
+  <li><strong>按压反馈：</strong>弹性缩放 (scale 0.92)，像按在软胶上</li>
+  <li><strong>按钮：</strong>渐变色 + 大圆角 + 多层阴影</li>
+  <li><strong>卡片：</strong>毛玻璃 + 黏土混合风格</li>
+  <li><strong>过渡动画：</strong>150-300ms，弹簧物理曲线</li>
+  <li><strong>分数变化：</strong>有数字跳动动画，绿色增长/红色下降</li>
+</ul>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="dark" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>深色音乐风</h3>
+      <p>靛蓝 + 绿，录音室质感，沉浸感强</p>
+      <span class="label" style="background:#e0f2e0;color:#2e7d32;">推荐</span>
+    </div>
+  </div>
+  <div class="option" data-choice="warm" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>暖色学习风</h3>
+      <p>红 + 琥珀色，温暖明亮，像课堂</p>
+    </div>
+  </div>
+</div>

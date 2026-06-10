@@ -1,0 +1,57 @@
+<h2>音乐考试评分系统 — 3 种技术方案</h2>
+<p class="subtitle">基于开源模型的实现路径对比</p>
+
+<h3>核心模型选择</h3>
+<p>调研后推荐的组合：</p>
+<ul>
+  <li><strong>CREPE</strong>（MIT License）— 深度学习音高追踪，准确率行业领先</li>
+  <li><strong>Librosa</strong> — 节奏/节拍分析，音色特征提取</li>
+  <li>两者均为 Python 库，pip install 即可使用</li>
+</ul>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>React 前端 + Python 后端（推荐）</h3>
+      <div class="tags"><span class="label" style="background:#e0f2e0;color:#2e7d32">推荐</span></div>
+      <ul>
+        <li>前端：React + Webcam API 录唱 + 实时反馈界面</li>
+        <li>后端：Python FastAPI + CREPE（音高）+ Librosa（节奏）</li>
+        <li>评分：实际音高 vs 参考旋律对比 → 音准分 + 节奏分</li>
+        <li><strong>优点</strong>：界面专业、前后端分离、可扩展</li>
+        <li><strong>代价</strong>：需要同时维护前后端</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Python 一体化应用（Streamlit/Gradio）</h3>
+      <div class="tags"><span class="label" style="background:#fff3e0;color:#e65100">快速原型</span></div>
+      <ul>
+        <li>纯 Python：Streamlit 做界面 + CREPE + Librosa</li>
+        <li>Webcam 通过 OpenCV 调用</li>
+        <li><strong>优点</strong>：开发速度最快、单一代码库</li>
+        <li><strong>代价</strong>：界面较简陋、定制化困难</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>纯前端方案（TensorFlow.js + 浏览器推理）</h3>
+      <div class="tags"><span class="label" style="background:#e3f2fd;color:#1565c0">探索性</span></div>
+      <ul>
+        <li>TF.js 运行 CREPE 模型，音高检测在浏览器完成</li>
+        <li>无需服务器，离线可用</li>
+        <li><strong>优点</strong>：部署简单、隐私性好</li>
+        <li><strong>代价</strong>：浏览器模型精度打折、节奏分析有限</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top: 2rem;"><strong>我的推荐：方案 A</strong> — 界面专业、评分可靠、后续扩展空间大（加入更多题型、成绩管理等）。符合这个项目作为正式产品的定位。</p>

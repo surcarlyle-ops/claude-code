@@ -1,0 +1,86 @@
+<h2>系统架构总览</h2>
+<p class="subtitle">React + Python 后端 + 3 个核心模型</p>
+
+<div class="mockup">
+  <div class="mockup-header">MusicExam 系统架构</div>
+  <div class="mockup-body">
+    <pre style="font-size: 14px; line-height: 1.6; background: #f5f5f5; padding: 16px; border-radius: 8px;">
+┌─────────────────────────────────────────────────────────┐
+│                   浏览器 (React App)                      │
+│  ┌─────────┐  ┌──────────┐  ┌───────────────────────┐  │
+│  │ 摄像头  │  │ 录音     │  │ 实时结果展示            │  │
+│  │ (人脸)  │  │ (Webcam) │  │ · 音准曲线             │  │
+│  └────┬────┘  └────┬─────┘  │ · 节奏对比             │  │
+│       │            │        │ · 综合评分             │  │
+│       └─────┬──────┘        │ · 考试状态             │  │
+│             │               └───────────────────────┘  │
+│             ▼                                            │
+│     ┌───────────────┐                                    │
+│     │ 音频数据流     │  → 后端 API                        │
+│     └───────────────┘                                    │
+└──────────────────────────┬──────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│               Python 后端 (FastAPI)                       │
+│                                                          │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │          评分引擎 (Scoring Engine)                │   │
+│  │  1. 音准评分: CREPE → 音高提取 → 与参考旋律对比    │   │
+│  │  2. 节奏评分: Librosa → 节拍检测 → 与参考节奏对比   │   │
+│  │  3. 综合评分: 加权平均 → 总分 + 分项分              │   │
+│  └──────────────────────────────────────────────────┘   │
+│                                                          │
+│  ┌─────────────┐  ┌────────────┐  ┌────────────────┐   │
+│  │ 曲目管理     │  │ 成绩管理    │  │  考生管理       │   │
+│  │ · 参考曲目   │  │ · 存储查询  │  │ · 人脸注册      │   │
+│  │ · MIDI/乐谱  │  │ · 数据分析  │  │ · 身份验证      │   │
+│  └─────────────┘  └────────────┘  └────────────────┘   │
+│                                                          │
+│  ┌──────────────┐                                        │
+│  │ SQLite (本地) │  → 可升级 PostgreSQL                   │
+│  └──────────────┘                                        │
+└─────────────────────────────────────────────────────────┘</pre>
+  </div>
+</div>
+
+<div class="section">
+<h3>技术栈</h3>
+<table style="width:100%;border-collapse:collapse;">
+  <tr style="border-bottom:1px solid #ddd;">
+    <td style="padding:8px 4px;"><strong>前端</strong></td>
+    <td style="padding:8px 4px;">React + TypeScript + Vite + Tailwind CSS</td>
+  </tr>
+  <tr style="border-bottom:1px solid #ddd;">
+    <td style="padding:8px 4px;"><strong>后端</strong></td>
+    <td style="padding:8px 4px;">Python FastAPI + Uvicorn</td>
+  </tr>
+  <tr style="border-bottom:1px solid #ddd;">
+    <td style="padding:8px 4px;"><strong>音高模型</strong></td>
+    <td style="padding:8px 4px;">CREPE (MIT License)</td>
+  </tr>
+  <tr style="border-bottom:1px solid #ddd;">
+    <td style="padding:8px 4px;"><strong>节奏分析</strong></td>
+    <td style="padding:8px 4px;">Librosa (ISC License)</td>
+  </tr>
+  <tr style="border-bottom:1px solid #ddd;">
+    <td style="padding:8px 4px;"><strong>人脸检测</strong></td>
+    <td style="padding:8px 4px;">OpenCV Haar Cascade / MediaPipe</td>
+  </tr>
+  <tr style="border-bottom:1px solid #ddd;">
+    <td style="padding:8px 4px;"><strong>数据库</strong></td>
+    <td style="padding:8px 4px;">SQLite（MVP）→ 后续可升 PostgreSQL</td>
+  </tr>
+</table>
+</div>
+
+<div class="section">
+<h3>数据流</h3>
+<ol>
+  <li>学生打开浏览器 → 摄像头自动开启（人脸检测确认身份）</li>
+  <li>选择考试曲目 → 显示参考旋律 → 开始录音</li>
+  <li>音频数据流传到后端 → CREPE 分析音高 + Librosa 分析节奏</li>
+  <li>后端返回实时评分结果 → 前端渲染音高曲线 + 节奏对比 + 分数</li>
+  <li>演唱结束 → 生成最终评分报告 → 存入数据库</li>
+</ol>
+</div>

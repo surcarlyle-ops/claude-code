@@ -26,10 +26,7 @@ export default function ExamPage() {
   const [activeMeasure, setActiveMeasure] = useState(0)
 
   const studentId = (() => {
-    try {
-      const s = JSON.parse(sessionStorage.getItem('student') ?? '{}')
-      return s.id as number
-    } catch { return 0 }
+    try { return JSON.parse(sessionStorage.getItem('student') ?? '{}').id as number } catch { return 0 }
   })()
 
   const songId = (() => {
@@ -38,32 +35,21 @@ export default function ExamPage() {
   })()
 
   useEffect(() => {
-    if (!studentId || !songId) {
-      navigate('/', { replace: true })
-      return
-    }
+    if (!studentId || !songId) { navigate('/', { replace: true }); return }
     getSong(songId).then(setSong).catch(() => {
-      setSong({
-        id: songId!,
-        title: '小星星 (Twinkle Twinkle)',
-        difficulty: 1 as const,
-        duration: 80,
-        notation_url: null,
-        midi_url: null,
-      })
+      setSong({ id: songId!, title: '小星星 (Twinkle Twinkle)', difficulty: 1 as const, duration: 80, notation_url: null, midi_url: null })
     })
   }, [songId, navigate, studentId])
 
   useEffect(() => {
     if (phase === 'ready' || phase === 'singing') {
       navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then((stream) => {
-          if (videoRef.current) videoRef.current.srcObject = stream
-        })
+        .then((stream) => { if (videoRef.current) videoRef.current.srcObject = stream })
         .catch(() => setError('请允许摄像头和麦克风访问'))
     }
   }, [phase])
 
+  // Canvas drawing
   useEffect(() => {
     if (phase !== 'singing') return
     const canvas = canvasRef.current
@@ -93,34 +79,21 @@ export default function ExamPage() {
     let animId: number
     const draw = () => {
       ctx.clearRect(0, 0, W, H)
-
       ctx.strokeStyle = '#F0EDEA'
       ctx.lineWidth = 1
       for (let i = 0; i < 5; i++) {
         const y = PAD.top + (PH / 4) * i
-        ctx.beginPath()
-        ctx.moveTo(PAD.left, y)
-        ctx.lineTo(W - PAD.right, y)
-        ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W - PAD.right, y); ctx.stroke()
       }
-
       if (refPoints.length > 1) {
-        ctx.strokeStyle = '#B0B0B0'
-        ctx.lineWidth = 2
-        ctx.setLineDash([6, 4])
-        ctx.beginPath()
-        ctx.moveTo(refPoints[0].x, refPoints[0].y)
-        for (let i = 1; i < refPoints.length; i++) {
-          ctx.lineTo(refPoints[i].x, refPoints[i].y)
-        }
-        ctx.stroke()
-        ctx.setLineDash([])
+        ctx.strokeStyle = '#B0B0B0'; ctx.lineWidth = 2; ctx.setLineDash([6, 4])
+        ctx.beginPath(); ctx.moveTo(refPoints[0].x, refPoints[0].y)
+        for (let i = 1; i < refPoints.length; i++) ctx.lineTo(refPoints[i].x, refPoints[i].y)
+        ctx.stroke(); ctx.setLineDash([])
       }
-
       const history = pitchHistoryRef.current
       if (history.length > 1) {
-        ctx.strokeStyle = '#FF6B6B'
-        ctx.lineWidth = 2.5
+        ctx.strokeStyle = '#FF6B6B'; ctx.lineWidth = 2.5
         ctx.beginPath()
         const duration = song?.duration ?? 60
         const firstX = PAD.left + (history[0].time / duration) * PW
@@ -133,28 +106,18 @@ export default function ExamPage() {
         }
         ctx.stroke()
       }
-
-      ctx.fillStyle = '#636E72'
-      ctx.font = '11px Nunito, sans-serif'
-      ctx.textAlign = 'right'
+      ctx.fillStyle = '#636E72'; ctx.font = '11px Nunito, sans-serif'; ctx.textAlign = 'right'
       ctx.fillText('高', PAD.left - 6, PAD.top + 12)
       ctx.fillText('低', PAD.left - 6, H - PAD.bottom)
-
       animId = requestAnimationFrame(draw)
     }
     draw()
-
     return () => cancelAnimationFrame(animId)
   }, [phase, song])
 
   const startRecording = useCallback(() => {
-    setPhase('singing')
-    setElapsed(0)
-    elapsedRef.current = 0
-    setActiveMeasure(0)
-    pitchHistoryRef.current = []
-    chunksRef.current = []
-
+    setPhase('singing'); setElapsed(0); elapsedRef.current = 0
+    setActiveMeasure(0); pitchHistoryRef.current = []; chunksRef.current = []
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then((stream) => {
         const recorder = new MediaRecorder(stream)
@@ -166,57 +129,36 @@ export default function ExamPage() {
       .catch(() => setError('无法访问麦克风'))
   }, [])
 
-  const stopRecording = useCallback(() => {
-    setPhase('submitting')
-    mediaRecorderRef.current?.stop()
-  }, [])
+  const stopRecording = useCallback(() => { setPhase('submitting'); mediaRecorderRef.current?.stop() }, [])
 
   useEffect(() => {
     if (phase !== 'countdown') return
-    if (countdown <= 0) {
-      startRecording()
-      return
-    }
+    if (countdown <= 0) { startRecording(); return }
     const t = setTimeout(() => setCountdown(countdown - 1), 1000)
     return () => clearTimeout(t)
   }, [phase, countdown])
 
   useEffect(() => {
     if (phase !== 'singing') return
-
     const interval = setInterval(() => {
       setElapsed((e) => {
         elapsedRef.current = e + 1
-        if (song && elapsedRef.current >= song.duration) {
-          stopRecording()
-          return e
-        }
+        if (song && elapsedRef.current >= song.duration) { stopRecording(); return e }
         return elapsedRef.current
       })
     }, 1000)
-
     const scoreInterval = setInterval(() => {
       setPitchScore(Math.min(100, Math.floor(Math.random() * 30) + 70))
       setRhythmScore(Math.min(100, Math.floor(Math.random() * 25) + 65))
     }, 1500)
-
     const pitchInterval = setInterval(() => {
       const t = elapsedRef.current
-      const baseFreq = 440
-      const variation = Math.sin(t * 0.5) * 40 + (Math.random() - 0.5) * 30
-      pitchHistoryRef.current.push({ time: t, value: baseFreq + variation })
+      pitchHistoryRef.current.push({ time: t, value: 440 + Math.sin(t * 0.5) * 40 + (Math.random() - 0.5) * 30 })
     }, 200)
-
     const measureInterval = setInterval(() => {
       setActiveMeasure(Math.min(MEASURES.length - 1, Math.floor(elapsedRef.current / MEASURE_DURATION)))
     }, 500)
-
-    return () => {
-      clearInterval(interval)
-      clearInterval(scoreInterval)
-      clearInterval(pitchInterval)
-      clearInterval(measureInterval)
-    }
+    return () => { clearInterval(interval); clearInterval(scoreInterval); clearInterval(pitchInterval); clearInterval(measureInterval) }
   }, [phase, song, stopRecording])
 
   const submitAudio = async () => {
@@ -224,18 +166,14 @@ export default function ExamPage() {
     const file = new File([blob], 'recording.webm', { type: 'audio/webm' })
     try {
       const result = await submitExam(studentId, songId!, file)
-      sessionStorage.setItem('lastResult', JSON.stringify(result))
-      setPhase('done')
-      navigate('/result')
+      sessionStorage.setItem('lastResult', JSON.stringify(result)); setPhase('done'); navigate('/result')
     } catch {
-      setError('提交评分失败，请重试')
-      setPhase('singing')
+      setError('提交评分失败，请重试'); setPhase('singing')
     }
   }
 
   const handleStart = () => setPhase('countdown')
   const handleStop = () => stopRecording()
-
   const progressPercent = song ? (elapsed / song.duration) * 100 : 0
   const totalScore = Math.round(pitchScore * 0.6 + rhythmScore * 0.4)
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
@@ -253,32 +191,28 @@ export default function ExamPage() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-4 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
-        <button
-          type="button"
-          onClick={() => navigate('/songs')}
-          className="flex items-center gap-1 text-text-muted hover:text-text-main transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span className="text-sm">退出</span>
-        </button>
-        <div className="text-center">
-          <p className="font-semibold text-text-main">{song.title}</p>
-          <p className="text-xs text-text-muted">{formatTime(elapsed)} / {formatTime(song.duration)}</p>
-        </div>
-        <div className="w-16 flex justify-end">
-          {phase === 'singing' && (
-            <div className="w-3 h-3 rounded-full bg-teal-mint animate-pulse shadow-sm shadow-teal-mint/50" />
-          )}
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between px-6 py-4">
+          <button type="button" onClick={() => navigate('/songs')} className="flex items-center gap-1 text-text-muted hover:text-text-main transition-colors">
+            <ArrowLeft size={20} />
+            <span className="text-sm">退出</span>
+          </button>
+          <div className="text-center">
+            <p className="font-semibold text-text-main">{song.title}</p>
+            <p className="text-xs text-text-muted">{formatTime(elapsed)} / {formatTime(song.duration)}</p>
+          </div>
+          <div className="w-16 flex justify-end">
+            {phase === 'singing' && <div className="w-3 h-3 rounded-full bg-teal-mint animate-pulse shadow-sm shadow-teal-mint/50" />}
+          </div>
         </div>
       </div>
 
-      {/* Main area */}
-      <div className="flex-1 px-5 py-4 flex gap-4 max-w-5xl mx-auto w-full">
-        {/* Camera */}
-        <div className="w-48 flex-shrink-0">
-          <div className="rounded-card overflow-hidden bg-gray-900 aspect-[3/4] relative shadow-sm">
+      {/* Main — two columns */}
+      <div className="flex-1 flex gap-6 px-6 py-6">
+        {/* Left: Camera */}
+        <div className="w-64 flex-shrink-0 flex flex-col">
+          <div className="rounded-card overflow-hidden bg-gray-900 aspect-[3/4] relative shadow-md flex-1">
             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
             {faceLost && (
               <div className="absolute top-2 left-2 right-2 bg-yellow-cream text-text-main text-xs px-3 py-1.5 rounded-full flex items-center gap-1 shadow-sm">
@@ -288,51 +222,44 @@ export default function ExamPage() {
             )}
             {phase === 'ready' && (
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <Microphone size={32} className="text-white/60" />
+                <Microphone size={40} className="text-white/60" />
               </div>
             )}
           </div>
           <p className="text-xs text-center mt-2">
-            {faceLost ? (
-              <span className="text-coral">⚠️ 请保持正对屏幕</span>
-            ) : (
-              <span className="text-teal-mint font-medium">● 人脸在位</span>
-            )}
+            {faceLost
+              ? <span className="text-coral">⚠️ 请保持正对屏幕</span>
+              : <span className="text-teal-mint font-medium">● 人脸在位</span>
+            }
           </p>
         </div>
 
-        {/* Score cards + pitch curve */}
-        <div className="flex-1 flex flex-col gap-3">
+        {/* Right: Score + Pitch + Notation */}
+        <div className="flex-1 flex flex-col gap-4">
           {/* Score cards */}
-          <div className="flex gap-3">
-            <div className="flex-1 rounded-card bg-gradient-to-br from-blue-sky to-blue-sky/70 p-4 text-center shadow-sm">
+          <div className="flex gap-4">
+            <div className="flex-1 rounded-card bg-gradient-to-br from-blue-sky to-blue-sky/70 p-5 text-center shadow-sm">
               <p className="text-xs text-text-muted mb-1">音准</p>
               <p className="text-2xl font-bold text-text-main">{pitchScore}</p>
               <div className="mt-2 h-2 rounded-full bg-white/60 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-teal-mint transition-all duration-500"
-                  style={{ width: `${pitchScore}%` }}
-                />
+                <div className="h-full rounded-full bg-teal-mint transition-all duration-500" style={{ width: `${pitchScore}%` }} />
               </div>
             </div>
-            <div className="flex-1 rounded-card bg-gradient-to-br from-mint to-mint/70 p-4 text-center shadow-sm">
+            <div className="flex-1 rounded-card bg-gradient-to-br from-mint to-mint/70 p-5 text-center shadow-sm">
               <p className="text-xs text-text-muted mb-1">节奏</p>
               <p className="text-2xl font-bold text-text-main">{rhythmScore}</p>
               <div className="mt-2 h-2 rounded-full bg-white/60 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-coral transition-all duration-500"
-                  style={{ width: `${rhythmScore}%` }}
-                />
+                <div className="h-full rounded-full bg-coral transition-all duration-500" style={{ width: `${rhythmScore}%` }} />
               </div>
             </div>
-            <div className="flex-1 rounded-card bg-gradient-to-br from-purple-lavender to-purple-lavender/70 p-4 text-center shadow-sm">
+            <div className="flex-1 rounded-card bg-gradient-to-br from-purple-lavender to-purple-lavender/70 p-5 text-center shadow-sm">
               <p className="text-xs text-text-muted mb-1">总分</p>
               <p className="text-2xl font-bold text-text-main">{totalScore}</p>
             </div>
           </div>
 
           {/* Pitch curve */}
-          <div className="flex-1 rounded-card bg-white p-4 flex flex-col min-h-0 shadow-sm">
+          <div className="flex-1 rounded-card bg-white p-5 flex flex-col min-h-0 shadow-sm">
             <p className="text-xs text-text-muted mb-2">音高实时曲线</p>
             <div className="flex-1 relative min-h-0">
               <canvas ref={canvasRef} className="w-full h-full" />
@@ -345,22 +272,18 @@ export default function ExamPage() {
           </div>
 
           {/* Notation */}
-          <div className="rounded-card bg-white p-4 overflow-hidden shadow-sm">
+          <div className="rounded-card bg-white p-5 shadow-sm">
             <p className="text-xs text-text-muted mb-2">简谱预览</p>
             <div className="flex gap-0 text-sm overflow-x-auto whitespace-nowrap scrollbar-hide">
               {MEASURES.map((measure, i) => (
-                <span
-                  key={i}
+                <span key={i}
                   className={`flex items-center gap-0 transition-all duration-300 ${
                     i === activeMeasure && phase === 'singing'
                       ? 'bg-coral/15 text-coral font-bold scale-110 rounded px-2 py-0.5'
                       : 'text-text-muted px-1'
                   }`}
                 >
-                  {measure}
-                  {i < MEASURES.length - 1 && (
-                    <span className="text-gray-300 mx-0.5">|</span>
-                  )}
+                  {measure}{i < MEASURES.length - 1 && <span className="text-gray-300 mx-0.5">|</span>}
                 </span>
               ))}
             </div>
@@ -369,48 +292,29 @@ export default function ExamPage() {
       </div>
 
       {/* Bottom bar */}
-      <div className="px-5 py-4 border-t border-gray-100 bg-white/50 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto">
-          <div className="h-3 rounded-full bg-gray-100 overflow-hidden mb-4 shadow-inner">
-            <div
-              className="h-full rounded-full transition-all duration-1000"
-              style={{
-                width: `${progressPercent}%`,
-                background: 'linear-gradient(90deg, #FF6B6B, #FADADD)',
-              }}
-            />
+      <div className="px-6 py-4 border-t border-gray-100 bg-white/50 backdrop-blur-sm">
+        <div className="flex items-center gap-6">
+          <div className="flex-1">
+            <div className="h-3 rounded-full bg-gray-100 overflow-hidden shadow-inner">
+              <div className="h-full rounded-full transition-all duration-1000"
+                style={{ width: `${progressPercent}%`, background: 'linear-gradient(90deg, #FF6B6B, #FADADD)' }}
+              />
+            </div>
           </div>
-
-          {error && (
-            <p className="text-coral text-sm text-center mb-3 bg-coral/5 px-4 py-2 rounded-card">
-              {error}
-            </p>
-          )}
-
-          <div className="flex justify-center">
+          {error && <p className="text-coral text-sm bg-coral/5 px-4 py-2 rounded-card">{error}</p>}
+          <div className="flex-shrink-0">
             {phase === 'ready' && (
-              <button
-                type="button"
-                onClick={handleStart}
+              <button type="button" onClick={handleStart}
                 className="px-10 py-3.5 rounded-btn bg-gradient-to-r from-coral to-coral/90 text-white font-semibold hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 shadow-sm"
-              >
-                开始演唱
-              </button>
+              >开始演唱</button>
             )}
             {phase === 'countdown' && (
-              <div className="text-[64px] font-bold text-coral animate-pulse drop-shadow-sm">
-                {countdown}
-              </div>
+              <div className="text-[64px] font-bold text-coral animate-pulse drop-shadow-sm">{countdown}</div>
             )}
             {phase === 'singing' && (
-              <button
-                type="button"
-                onClick={handleStop}
-                className="flex items-center gap-2 px-8 py-3.5 rounded-btn bg-white border border-gray-200 text-text-main font-semibold hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
-              >
-                <StopCircle size={20} className="text-coral" />
-                结束演唱
-              </button>
+              <button type="button" onClick={handleStop}
+                className="flex items-center gap-2 px-8 py-3.5 rounded-btn bg-white border border-gray-200 text-text-main font-semibold hover:bg-gray-50 hover:shadow-sm transition-all"
+              ><StopCircle size={20} className="text-coral" /> 结束演唱</button>
             )}
             {phase === 'submitting' && (
               <div className="flex items-center gap-2 text-text-muted">
