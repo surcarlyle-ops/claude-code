@@ -1,22 +1,55 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Caveat&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Caveat:wght@400;700&display=swap');
 @import 'tailwindcss';
 
 @theme {
-  --color-surface: #FFFAF5;
-  --color-pink-soft: #FADADD;
-  --color-yellow-cream: #FDF4D0;
-  --color-blue-sky: #D6ECFB;
-  --color-mint: #D5F5E3;
-  --color-purple-lavender: #E8DAEF;
-  --color-coral: #FF6B6B;
-  --color-teal-mint: #4ECDC4;
-  --color-text-main: #2D3436;
-  --color-text-muted: #636E72;
+  /* ── 多巴胺马卡龙核心色系 ── */
+  --color-surface: #FFF8F0;
+  --color-surface-warm: #FEF5E7;
+
+  /* 主色 - 更鲜艳的马卡龙 */
+  --color-pink-soft: #F8D7E8;
+  --color-pink-bright: #F48FB1;
+  --color-yellow-cream: #F5E6A3;
+  --color-yellow-bright: #FFD54F;
+  --color-blue-sky: #BBDEFB;
+  --color-blue-bright: #64B5F6;
+  --color-mint: #C8E6C9;
+  --color-mint-bright: #81C784;
+  --color-purple-lavender: #E1BEE7;
+  --color-purple-bright: #BA68C8;
+  --color-coral: #FF8A80;
+  --color-coral-bright: #FF5252;
+  --color-teal-mint: #80CBC4;
+  --color-teal-bright: #4DB6AC;
+
+  /* 卡片背景色 */
+  --color-card-pink: #FCE4EC;
+  --color-card-yellow: #FFF9C4;
+  --color-card-blue: #E3F2FD;
+  --color-card-green: #E8F5E9;
+  --color-card-purple: #F3E5F5;
+  --color-card-coral: #FFEBEE;
+  --color-card-cream: #FFF8E1;
+  --color-card-lavender: #EDE7F6;
+
+  /* 文字色 */
+  --color-text-main: #1A1A2E;
+  --color-text-muted: #6B7280;
+  --color-text-light: #9CA3AF;
+
+  /* 深色导航/按钮 */
+  --color-dark: #1A1A2E;
+  --color-dark-lighter: #2D2D44;
+
+  /* 字体 */
   --font-sans: 'Nunito', system-ui, sans-serif;
   --font-handwriting: 'Caveat', cursive;
-  --radius-card: 20px;
-  --radius-btn: 16px;
-  --radius-input: 14px;
+
+  /* 圆角 */
+  --radius-card: 24px;
+  --radius-btn: 20px;
+  --radius-input: 16px;
+  --radius-pill: 9999px;
 }
 
 body {
@@ -27,10 +60,6 @@ body {
 }
 
 /* ── 全局弹性容器 ── */
-/*
- * .container-wide 是一个弹性容器，在大屏上等比放大的同时控制最大宽度。
- * 配合 CSS clamp() + 视口单位实现平滑缩放，无硬断点跳跃感。
- */
 .container-wide {
   --container-max: min(896px, 90vw);
   max-width: var(--container-max);
@@ -40,28 +69,24 @@ body {
   padding-right: 1.5rem;
 }
 
-/* xl: 1280px+ — 容器加宽，内容舒适 */
 @media (min-width: 1280px) {
   .container-wide {
     --container-max: min(1024px, 85vw);
   }
 }
 
-/* 2xl: 1536px+ — 更宽 */
 @media (min-width: 1536px) {
   .container-wide {
     --container-max: min(1200px, 80vw);
   }
 }
 
-/* 3xl: 1920px+ — 全屏大屏，充分使用空间 */
 @media (min-width: 1920px) {
   .container-wide {
     --container-max: min(1400px, 75vw);
   }
 }
 
-/* 4xl: 2560px+ — 超宽屏仍控制比例 */
 @media (min-width: 2560px) {
   .container-wide {
     --container-max: min(1600px, 70vw);
@@ -95,6 +120,10 @@ body {
 
 .text-responsive-4xl {
   font-size: clamp(2.25rem, 1.6rem + 1.6vw, 4rem);
+}
+
+.text-responsive-5xl {
+  font-size: clamp(3rem, 2rem + 2vw, 5rem);
 }
 
 /* ── 响应式间距辅助类 ── */
@@ -138,4 +167,87 @@ body {
 .icon-responsive-lg {
   width: clamp(1.5rem, 1.2rem + 0.6vw, 2.25rem);
   height: clamp(1.5rem, 1.2rem + 0.6vw, 2.25rem);
+}
+
+/* ── 多巴胺卡片基础样式 ── */
+.card-dopamine {
+  border-radius: var(--radius-card);
+  padding: clamp(1.25rem, 1rem + 0.8vw, 2rem);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-dopamine:hover {
+  transform: translateY(-2px);
+}
+
+/* ── 药丸标签 ── */
+.pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--radius-pill);
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.875rem);
+  font-weight: 600;
+}
+
+/* ── 深色按钮（参考图 Start → 风格）── */
+.btn-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.875rem, 0.75rem + 0.5vw, 1.25rem) clamp(1.5rem, 1.25rem + 1vw, 2.5rem);
+  background-color: var(--color-dark);
+  color: white;
+  border-radius: var(--radius-btn);
+  font-weight: 700;
+  font-size: clamp(0.875rem, 0.8rem + 0.3vw, 1.125rem);
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-dark:hover {
+  background-color: var(--color-dark-lighter);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(26, 26, 46, 0.25);
+}
+
+/* ── 彩色圆形图标按钮 ── */
+.icon-btn-color {
+  width: clamp(3rem, 2.5rem + 2vw, 4.5rem);
+  height: clamp(3rem, 2.5rem + 2vw, 4.5rem);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.icon-btn-color:hover {
+  transform: scale(1.08);
+}
+
+/* ── 无边框输入框 ── */
+.input-underline {
+  width: 100%;
+  padding: 0.75rem 0;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  font-size: clamp(0.875rem, 0.8rem + 0.3vw, 1rem);
+  font-family: var(--font-sans);
+  color: var(--color-text-main);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input-underline:focus {
+  border-bottom-color: var(--color-pink-bright);
+}
+
+.input-underline::placeholder {
+  color: var(--color-text-light);
 }

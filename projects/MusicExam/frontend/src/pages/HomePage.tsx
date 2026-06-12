@@ -1,162 +1,231 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Microphone, ClockCounterClockwise, MusicNotes, GraduationCap, Sparkle, Target } from '@phosphor-icons/react'
-import gsap from 'gsap'
+import {
+  Microphone, TrendUp, BookOpen, Clock, CheckCircle,
+  Star, CaretRight, User, Calendar, Trophy, MusicNote
+} from '@phosphor-icons/react'
 import BottomNav from '../components/BottomNav'
+import { useScale } from '../components/ScaleProvider'
 
-const GRADE_LABELS: Record<string, string> = {
-  'p3': '小学三年级', 'p4': '小学四年级', 'p5': '小学五年级',
-  'm1': '初中预备班', 'm2': '初中一年级', 'm3': '初中二年级', 'm4': '初中三年级',
+interface Student {
+  id: string
+  name: string
+  gender: string
+  grade: string
+  avatar?: string
 }
 
-function getGrade(score: number): { label: string; color: string } {
-  if (score >= 90) return { label: 'A+', color: 'text-yellow-500' }
-  if (score >= 85) return { label: 'A', color: 'text-teal-mint' }
-  if (score >= 80) return { label: 'B+', color: 'text-blue-400' }
-  if (score >= 70) return { label: 'B', color: 'text-purple-400' }
-  if (score >= 60) return { label: 'C', color: 'text-yellow-400' }
-  return { label: 'D', color: 'text-gray-400' }
+interface TodoItem {
+  id: number
+  title: string
+  description: string
+  time: string
+  color: 'pink' | 'yellow' | 'blue' | 'green' | 'purple'
+  completed: boolean
 }
 
-const HOVER_COLORS = [
-  'hover:shadow-rose-200/50 hover:border-rose-200',
-  'hover:shadow-mint/50 hover:border-mint',
-  'hover:shadow-blue-sky/50 hover:border-blue-200',
-  'hover:shadow-purple-lavender/50 hover:border-purple-200',
+const DEMO_STUDENT: Student = {
+  id: 'demo-001',
+  name: '张同学',
+  gender: '男',
+  grade: '七年级'
+}
+
+const DEMO_TODOS: TodoItem[] = [
+  { id: 1, title: '演唱练习', description: '《茉莉花》完整演唱', time: '今天 14:00', color: 'pink', completed: false },
+  { id: 2, title: '视唱练耳', description: 'C大调音阶练习', time: '今天 16:30', color: 'yellow', completed: false },
+  { id: 3, title: '错题回顾', description: '上周考试错题复习', time: '明天 10:00', color: 'blue', completed: false },
+  { id: 4, title: '乐理知识', description: '节拍与节奏基础', time: '明天 14:00', color: 'green', completed: true },
 ]
+
+const COLOR_MAP = {
+  pink: { bg: 'bg-card-pink', accent: 'text-pink-bright', dot: 'bg-pink-bright' },
+  yellow: { bg: 'bg-card-yellow', accent: 'text-yellow-bright', dot: 'bg-yellow-bright' },
+  blue: { bg: 'bg-card-blue', accent: 'text-blue-bright', dot: 'bg-blue-bright' },
+  green: { bg: 'bg-card-green', accent: 'text-mint-bright', dot: 'bg-mint-bright' },
+  purple: { bg: 'bg-card-purple', accent: 'text-purple-bright', dot: 'bg-purple-bright' },
+}
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const welcomeRef = useRef<HTMLDivElement>(null)
-  const cardsRef = useRef<HTMLDivElement>(null)
-  const historyRef = useRef<HTMLDivElement>(null)
-
-  const [studentName, setStudentName] = useState('同学')
-  const [studentGrade, setStudentGrade] = useState('')
+  const { isDemo } = useScale()
+  const [student, setStudent] = useState<Student | null>(null)
+  const [todos, setTodos] = useState<TodoItem[]>(DEMO_TODOS)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const raw = sessionStorage.getItem('student')
-    if (!raw) { navigate('/welcome', { replace: true }); return }
-    try {
-      const data = JSON.parse(raw)
-      setStudentName(data.name || '同学')
-      setStudentGrade(GRADE_LABELS[data.grade] || '')
-    } catch {
-      navigate('/welcome', { replace: true })
+    const stored = sessionStorage.getItem('student')
+    if (stored) {
+      try {
+        setStudent(JSON.parse(stored))
+      } catch {
+        setStudent(DEMO_STUDENT)
+      }
+    } else if (isDemo) {
+      setStudent(DEMO_STUDENT)
     }
-  }, [navigate])
+    setLoading(false)
+  }, [isDemo])
 
-  useEffect(() => {
-    if (!welcomeRef.current) return
-    gsap.fromTo(welcomeRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' })
-    if (cardsRef.current?.children) {
-      gsap.fromTo(cardsRef.current.children, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.12, ease: 'power2.out', delay: 0.2 })
-    }
-    if (historyRef.current?.children) {
-      gsap.fromTo(historyRef.current.children, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, stagger: 0.08, ease: 'power2.out', delay: 0.35 })
-    }
-  }, [])
+  const toggleTodo = (id: number) => {
+    setTodos(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t))
+  }
 
-  const mockHistory = [
-    { date: '06-09', title: '送别', score: 85, time: '1:20' },
-    { date: '06-08', title: '茉莉花', score: 92, time: '2:10' },
-    { date: '06-05', title: '友谊地久天长', score: 78, time: '1:45' },
-  ]
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="animate-spin text-4xl">🎵</div>
+      </div>
+    )
+  }
+
+  const displayStudent = student || DEMO_STUDENT
+  const completedCount = todos.filter(t => t.completed).length
+  const progressPercent = Math.round((completedCount / todos.length) * 100)
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
-      <div className="flex-1">
-        {/* Decorative background elements */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-          <div className="absolute top-20 right-10 text-rose-200/20"><Sparkle size={48} weight="fill" /></div>
-          <div className="absolute top-40 left-5 text-mint/20"><MusicNotes size={32} weight="fill" /></div>
-          <div className="absolute bottom-40 right-20 text-purple-lavender/30"><Sparkle size={36} weight="fill" /></div>
-          <div className="absolute bottom-60 left-10 text-blue-sky/20"><MusicNotes size={28} weight="fill" /></div>
+    <div className="min-h-screen bg-surface pb-24">
+      <div className="container-wide py-6 lg:py-8">
+        {/* ── Header: Hello + Avatar ── */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <p className="text-text-light text-responsive-sm mb-1">Good morning,</p>
+            <h1 className="text-responsive-3xl font-black text-text-main">
+              Hello, {displayStudent.name}
+            </h1>
+          </div>
+          <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-full bg-gradient-to-br from-pink-soft to-purple-lavender flex items-center justify-center shadow-md">
+            <User size={28} weight="bold" className="text-text-main" />
+          </div>
         </div>
 
-        <div className="relative z-10 container-wide">
-          {/* Welcome */}
-          <div ref={welcomeRef} className="mb-8">
-            <h1 className="text-responsive-3xl font-bold text-text-main mb-1">
-              {studentName}，你好！
-            </h1>
-            <p className="text-text-muted flex items-center gap-2">
-              <GraduationCap size={18} />
-              今天想练哪首歌？
-              {studentGrade && <span className="text-xs bg-rose-100 text-rose-500 px-2.5 py-0.5 rounded-full">{studentGrade}</span>}
-            </p>
+        {/* ── Info Pills ── */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <span className="pill-tag bg-card-pink">
+            <User size={12} className="text-pink-bright" />
+            {displayStudent.gender}
+          </span>
+          <span className="pill-tag bg-card-yellow">
+            <Calendar size={12} className="text-yellow-bright" />
+            {displayStudent.grade}
+          </span>
+          <span className="pill-tag bg-card-green">
+            <Trophy size={12} className="text-mint-bright" />
+            上次: 85分
+          </span>
+        </div>
+
+        {/* ── Progress Cards ── */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* Practice Progress - Pink */}
+          <div className="card-dopamine bg-card-pink">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-pink-soft flex items-center justify-center">
+                <Microphone size={16} weight="bold" className="text-pink-bright" />
+              </div>
+              <span className="text-sm font-semibold text-text-muted">练习进度</span>
+            </div>
+            <div className="text-responsive-3xl font-black text-text-main mb-1">
+              {progressPercent}%
+            </div>
+            <div className="w-full h-2 bg-white/60 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-pink-bright to-coral rounded-full transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <p className="text-text-light text-xs mt-2">{completedCount}/{todos.length} 已完成</p>
           </div>
 
-          {/* Practice + Exam cards */}
-          <div className="mb-8">
-            <h2 className="text-responsive-lg font-bold text-text-main mb-1 flex items-center gap-2">
-              <Microphone size={22} className="text-rose-400" />
-              开始练习
-            </h2>
-            <p className="text-text-muted text-sm mb-4">跟着歌词练唱，轻松上手</p>
-            <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-2 gap-4 2xl:gap-6">
-              <button type="button" onClick={() => navigate('/songs', { state: { mode: 'practice' } })}
-                className="rounded-card bg-gradient-to-br from-rose-400 to-rose-500 p-6 text-left text-white shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Microphone size={26} weight="fill" />
-                  </div>
-                  <div>
-                    <h3 className="text-responsive-lg font-bold">开始练习</h3>
-                    <p className="text-white/70 text-sm">跟唱模式 · 歌词常驻</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-white/60 text-xs">
-                  <MusicNotes size={14} />
-                  跟着提示练唱
-                </div>
-              </button>
-
-              <button type="button" onClick={() => navigate('/songs', { state: { mode: 'exam' } })}
-                className="rounded-card bg-gradient-to-br from-purple-lavender to-purple-300 p-6 text-left text-text-main shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-xl bg-white/40 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Target size={26} weight="fill" className="text-purple-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-responsive-lg font-bold">模拟考试</h3>
-                    <p className="text-text-muted/70 text-sm">完整评分模式 · 隐藏歌词</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-text-muted/50 text-xs">
-                  <MusicNotes size={14} />
-                  完整评分 + 等级
-                </div>
-              </button>
+          {/* Completed Songs - Yellow */}
+          <div className="card-dopamine bg-card-yellow">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-yellow-cream flex items-center justify-center">
+                <MusicNote size={16} weight="bold" className="text-yellow-bright" />
+              </div>
+              <span className="text-sm font-semibold text-text-muted">已完成</span>
+            </div>
+            <div className="text-responsive-3xl font-black text-text-main mb-1">
+              12
+            </div>
+            <p className="text-text-light text-xs">首曲目</p>
+            <div className="flex items-center gap-1 mt-2 text-yellow-bright">
+              <TrendUp size={14} weight="bold" />
+              <span className="text-xs font-semibold">+3 本周</span>
             </div>
           </div>
+        </div>
 
-          {/* Recent records */}
-          <div>
-            <h2 className="text-base font-semibold text-text-main mb-4 flex items-center gap-2">
-              <ClockCounterClockwise size={18} className="text-rose-400" />
-              最近练习
-            </h2>
+        {/* ── Quick Actions ── */}
+        <div className="mb-6">
+          <h2 className="text-responsive-xl font-bold text-text-main mb-4">快捷功能</h2>
+          <div className="flex justify-between gap-3">
+            {[
+              { icon: Microphone, label: '演唱练习', color: 'bg-pink-soft', iconColor: 'text-pink-bright', action: () => navigate('/songs') },
+              { icon: BookOpen, label: '视唱练耳', color: 'bg-yellow-cream', iconColor: 'text-yellow-bright', action: () => {} },
+              { icon: Star, label: '错题回顾', color: 'bg-blue-sky', iconColor: 'text-blue-bright', action: () => {} },
+              { icon: TrendUp, label: '历史记录', color: 'bg-mint', iconColor: 'text-mint-bright', action: () => navigate('/trends') },
+              { icon: Clock, label: '更多', color: 'bg-purple-lavender', iconColor: 'text-purple-bright', action: () => {} },
+            ].map((item, i) => (
+              <button
+                key={i}
+                onClick={item.action}
+                className="flex flex-col items-center gap-2 group"
+              >
+                <div className={`icon-btn-color ${item.color} ${item.iconColor} shadow-sm`}>
+                  <item.icon size={24} weight="bold" />
+                </div>
+                <span className="text-xs font-semibold text-text-muted group-hover:text-text-main transition-colors">
+                  {item.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-            <div ref={historyRef} className="space-y-3">
-              {mockHistory.map((record, i) => {
-                const g = getGrade(record.score)
-                return (
-                  <div key={i}
-                    className={`bg-white rounded-card p-4 flex items-center gap-4 shadow-sm border-2 border-transparent cursor-pointer transition-all duration-200 ${HOVER_COLORS[i % HOVER_COLORS.length]} hover:shadow-md hover:-translate-y-0.5`}
-                    onClick={() => navigate('/result')}
+        {/* ── Todo List ── */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-responsive-xl font-bold text-text-main">今日任务</h2>
+            <span className="text-sm text-text-light">{completedCount}/{todos.length} 完成</span>
+          </div>
+
+          <div className="space-y-3">
+            {todos.map((todo) => {
+              const colors = COLOR_MAP[todo.color]
+              return (
+                <div
+                  key={todo.id}
+                  className={`card-dopamine ${colors.bg} flex items-center gap-4 ${todo.completed ? 'opacity-60' : ''}`}
+                >
+                  <button
+                    onClick={() => toggleTodo(todo.id)}
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                      todo.completed
+                        ? 'bg-mint-bright border-mint-bright'
+                        : 'border-text-light hover:border-text-main'
+                    }`}
                   >
-                    <div className="flex-1">
-                      <p className="font-semibold text-text-main">{record.title}</p>
-                      <p className="text-xs text-text-muted">{record.date} · {record.time}</p>
-                    </div>
-                    <span className={`text-responsive-lg font-bold ${g.color}`}>{g.label}</span>
+                    {todo.completed && <CheckCircle size={14} weight="bold" className="text-white" />}
+                  </button>
+
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`font-bold text-text-main text-responsive-base ${todo.completed ? 'line-through' : ''}`}>
+                      {todo.title}
+                    </h3>
+                    <p className="text-text-light text-sm truncate">{todo.description}</p>
                   </div>
-                )
-              })}
-            </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs text-text-light flex items-center gap-1">
+                      <Clock size={12} />
+                      {todo.time}
+                    </span>
+                    <CaretRight size={16} className="text-text-light" />
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>

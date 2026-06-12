@@ -1,40 +1,50 @@
-import { useNavigate, useLocation } from 'react-router-dom'
-import { House, MusicNote, ChartLine, User } from '@phosphor-icons/react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { House, BookOpen, Microphone, ChartBar, User } from '@phosphor-icons/react'
 
-const NAV_ITEMS = [
+const navItems = [
   { path: '/home', label: '首页', icon: House },
-  { path: '/songs', label: '选曲', icon: MusicNote },
-  { path: '/trends', label: '记录', icon: ChartLine },
-  { path: '/login', label: '我', icon: User },
+  { path: '/songs', label: '曲目', icon: BookOpen },
+  { path: '/sing', label: '演唱', icon: Microphone },
+  { path: '/trends', label: '趋势', icon: ChartBar },
+  { path: '/profile', label: '我的', icon: User },
 ]
 
 export default function BottomNav() {
-  const navigate = useNavigate()
   const location = useLocation()
+  const navigate = useNavigate()
+  const currentPath = location.pathname
 
   return (
-    <div className="border-t border-rose-100 bg-white/90 backdrop-blur-md shadow-sm">
-      <div className="max-w-5xl 2xl:max-w-7xl mx-auto flex items-center justify-around py-2">
-        {NAV_ITEMS.map((item) => {
-          const isActive = location.pathname === item.path
-          const Icon = item.icon
+    <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+      <div className="bg-dark rounded-full px-2 py-2 shadow-xl flex items-center gap-1">
+        {navItems.map((item) => {
+          const isActive = currentPath.startsWith(item.path)
           return (
             <button
               key={item.path}
-              type="button"
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-0.5 px-4 py-1 rounded-xl transition-all duration-200 ${
+              className={`relative flex flex-col items-center justify-center px-4 py-2 rounded-full transition-all duration-200 ${
                 isActive
-                  ? 'text-rose-400'
-                  : 'text-gray-300 hover:text-text-muted'
+                  ? 'bg-white/15'
+                  : 'hover:bg-white/5'
               }`}
             >
-              <Icon size={20} weight={isActive ? 'fill' : 'regular'} />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <item.icon
+                size={22}
+                weight={isActive ? 'fill' : 'regular'}
+                className={isActive ? 'text-white' : 'text-white/50'}
+              />
+              <span className={`text-[10px] mt-0.5 font-medium ${isActive ? 'text-white' : 'text-white/40'}`}>
+                {item.label}
+              </span>
+              {/* Active indicator dot */}
+              {isActive && (
+                <div className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-coral" />
+              )}
             </button>
           )
         })}
       </div>
-    </div>
+    </nav>
   )
 }
