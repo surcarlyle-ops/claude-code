@@ -7,9 +7,9 @@ export default function WelcomePage() {
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       {/* Main content */}
-      <div className="flex-1 flex flex-col lg:flex-row items-center justify-center px-6 lg:px-16 gap-8 lg:gap-12">
+      <div className="flex-1 flex flex-col lg:flex-row items-center justify-center px-6 lg:px-12 2xl:px-16 gap-8 lg:gap-12 2xl:gap-16">
         {/* Left: Illustration area */}
-        <div className="relative w-full max-w-md lg:max-w-lg aspect-square lg:aspect-[4/3]">
+        <div className="relative w-full max-w-md lg:max-w-lg 2xl:max-w-2xl aspect-square lg:aspect-[4/3] 2xl:aspect-[16/9]">
           {/* Abstract flat vector illustration using colored shapes */}
           <div className="relative w-full h-full">
             {/* Background shapes */}
@@ -58,28 +58,28 @@ export default function WelcomePage() {
         </div>
 
         {/* Right: Text + CTA */}
-        <div className="text-center lg:text-left max-w-sm">
+        <div className="text-center lg:text-left max-w-sm 2xl:max-w-lg">
           <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
-            <span className="text-3xl">🎵</span>
-            <h2 className="text-lg font-bold text-rose-400 tracking-wide">MusicExam</h2>
+            <span className="text-responsive-2xl">🎵</span>
+            <h2 className="text-responsive-lg font-bold text-rose-400 tracking-wide">MusicExam</h2>
           </div>
 
-          <h1 className="text-[40px] lg:text-[48px] font-bold text-text-main leading-tight mb-3">
+          <h1 className="text-responsive-4xl font-bold text-text-main leading-tight mb-3">
             唱出你的<br />
             <span className="text-rose-400">最好成绩</span>
           </h1>
 
-          <p className="text-text-muted text-lg mb-2">
+          <p className="text-text-muted text-responsive-lg mb-2">
             上海中小学音乐考试练习平台
           </p>
-          <p className="text-text-muted/70 text-sm mb-8">
+          <p className="text-text-muted/70 text-responsive-sm mb-8">
             对着镜头唱一首，AI 实时评分，知道你哪里唱得好、哪里需要练
           </p>
 
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="inline-flex items-center gap-2 px-10 py-4 rounded-btn bg-gradient-to-r from-rose-400 to-rose-500 text-white text-lg font-semibold hover:shadow-lg hover:-translate-y-1 transition-all duration-200 shadow-md"
+            className="inline-flex items-center gap-2 px-[clamp(1.5rem,4vw,2.5rem)] py-[clamp(0.75rem,1.5vw,1.25rem)] rounded-btn bg-gradient-to-r from-rose-400 to-rose-500 text-white text-responsive-lg font-semibold hover:shadow-lg hover:-translate-y-1 transition-all duration-200 shadow-md"
           >
             <Microphone size={22} weight="bold" />
             开始练习

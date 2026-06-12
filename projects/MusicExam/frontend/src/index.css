@@ -25,3 +25,117 @@ body {
   color: var(--color-text-main);
   font-family: var(--font-sans);
 }
+
+/* ── 全局弹性容器 ── */
+/*
+ * .container-wide 是一个弹性容器，在大屏上等比放大的同时控制最大宽度。
+ * 配合 CSS clamp() + 视口单位实现平滑缩放，无硬断点跳跃感。
+ */
+.container-wide {
+  --container-max: min(896px, 90vw);
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+/* xl: 1280px+ — 容器加宽，内容舒适 */
+@media (min-width: 1280px) {
+  .container-wide {
+    --container-max: min(1024px, 85vw);
+  }
+}
+
+/* 2xl: 1536px+ — 更宽 */
+@media (min-width: 1536px) {
+  .container-wide {
+    --container-max: min(1200px, 80vw);
+  }
+}
+
+/* 3xl: 1920px+ — 全屏大屏，充分使用空间 */
+@media (min-width: 1920px) {
+  .container-wide {
+    --container-max: min(1400px, 75vw);
+  }
+}
+
+/* 4xl: 2560px+ — 超宽屏仍控制比例 */
+@media (min-width: 2560px) {
+  .container-wide {
+    --container-max: min(1600px, 70vw);
+  }
+}
+
+/* ── 响应式字体辅助类 ── */
+.text-responsive-sm {
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 1rem);
+}
+
+.text-responsive-base {
+  font-size: clamp(0.875rem, 0.8rem + 0.3vw, 1.125rem);
+}
+
+.text-responsive-lg {
+  font-size: clamp(1rem, 0.9rem + 0.4vw, 1.375rem);
+}
+
+.text-responsive-xl {
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.75rem);
+}
+
+.text-responsive-2xl {
+  font-size: clamp(1.5rem, 1.2rem + 0.8vw, 2.25rem);
+}
+
+.text-responsive-3xl {
+  font-size: clamp(1.875rem, 1.4rem + 1.2vw, 3rem);
+}
+
+.text-responsive-4xl {
+  font-size: clamp(2.25rem, 1.6rem + 1.6vw, 4rem);
+}
+
+/* ── 响应式间距辅助类 ── */
+.gap-responsive-sm {
+  gap: clamp(0.5rem, 0.4rem + 0.3vw, 0.75rem);
+}
+
+.gap-responsive-md {
+  gap: clamp(0.75rem, 0.6rem + 0.4vw, 1.25rem);
+}
+
+.gap-responsive-lg {
+  gap: clamp(1rem, 0.8rem + 0.6vw, 1.5rem);
+}
+
+.p-responsive {
+  padding: clamp(1rem, 0.8rem + 0.6vw, 2rem);
+}
+
+.px-responsive {
+  padding-left: clamp(1rem, 0.8rem + 0.6vw, 2rem);
+  padding-right: clamp(1rem, 0.8rem + 0.6vw, 2rem);
+}
+
+.py-responsive {
+  padding-top: clamp(0.75rem, 0.6rem + 0.4vw, 1.5rem);
+  padding-bottom: clamp(0.75rem, 0.6rem + 0.4vw, 1.5rem);
+}
+
+/* ── 响应式装饰/图标尺寸 ── */
+.icon-responsive-sm {
+  width: clamp(1rem, 0.9rem + 0.3vw, 1.5rem);
+  height: clamp(1rem, 0.9rem + 0.3vw, 1.5rem);
+}
+
+.icon-responsive-md {
+  width: clamp(1.25rem, 1.1rem + 0.4vw, 1.75rem);
+  height: clamp(1.25rem, 1.1rem + 0.4vw, 1.75rem);
+}
+
+.icon-responsive-lg {
+  width: clamp(1.5rem, 1.2rem + 0.6vw, 2.25rem);
+  height: clamp(1.5rem, 1.2rem + 0.6vw, 2.25rem);
+}

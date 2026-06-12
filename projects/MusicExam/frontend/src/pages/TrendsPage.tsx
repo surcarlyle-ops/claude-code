@@ -117,17 +117,17 @@ export default function TrendsPage() {
       <div className="flex-1">
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
-          <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="max-w-5xl mx-auto px-6 2xl:px-8 py-4 flex items-center justify-between">
             <button type="button" onClick={() => navigate('/home')} className="flex items-center gap-1 text-text-muted hover:text-text-main transition-colors">
               <ArrowLeft size={20} />
               <span className="text-sm">返回</span>
             </button>
-            <h1 className="text-xl font-bold text-text-main">学习记录</h1>
+            <h1 className="text-responsive-xl font-bold text-text-main">学习记录</h1>
             <div className="w-16" />
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto px-6 py-8">
+        <div className="max-w-5xl 2xl:max-w-7xl mx-auto px-6 2xl:px-8 py-8">
           {/* Filter */}
           <div className="flex gap-3 mb-6">
             {[
@@ -142,7 +142,7 @@ export default function TrendsPage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 2xl:gap-8 gap-6">
             <div className="lg:col-span-2 space-y-4">
               <canvas ref={canvasRef} className="w-full h-72" style={{ borderRadius: '20px' }} />
 
@@ -167,7 +167,7 @@ export default function TrendsPage() {
             <div className="space-y-4">
               <div className="rounded-card bg-white p-6 shadow-sm">
                 <p className="text-xs text-text-muted mb-1">7天平均分</p>
-                <p className="text-[36px] font-bold text-text-main leading-none mb-3">{avgScore}</p>
+                <p className="text-responsive-2xl font-bold text-text-main leading-none mb-3">{avgScore}</p>
                 <div className="flex items-center gap-1 text-sm text-teal-mint">
                   <Star size={16} weight="fill" />
                   <span>趋势上升</span>
@@ -175,11 +175,11 @@ export default function TrendsPage() {
               </div>
               <div className="rounded-card bg-white p-6 shadow-sm">
                 <p className="text-xs text-text-muted mb-1">最高分</p>
-                <p className="text-[36px] font-bold text-text-main leading-none">{Math.max(...MOCK_SCORES.map(s => s.score))}</p>
+                <p className="text-responsive-2xl font-bold text-text-main leading-none">{Math.max(...MOCK_SCORES.map(s => s.score))}</p>
               </div>
               <div className="rounded-card bg-white p-6 shadow-sm">
                 <p className="text-xs text-text-muted mb-1">练习次数</p>
-                <p className="text-[36px] font-bold text-text-main leading-none">{MOCK_RECORDS.length}</p>
+                <p className="text-responsive-2xl font-bold text-text-main leading-none">{MOCK_RECORDS.length}</p>
               </div>
             </div>
           </div>

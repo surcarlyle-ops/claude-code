@@ -63,13 +63,13 @@ export default function SongsPage() {
       <div className="flex-1">
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-md border-b border-rose-100 shadow-sm">
-          <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="max-w-5xl mx-auto px-6 2xl:px-8 py-4 flex items-center justify-between">
             <button type="button" onClick={() => navigate('/home')} className="flex items-center gap-1 text-text-muted hover:text-text-main transition-colors">
               <ArrowLeft size={20} />
               <span className="text-sm">返回</span>
             </button>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-text-main">选择曲目</h1>
+              <h1 className="text-responsive-xl font-bold text-text-main">选择曲目</h1>
               <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
                 mode === 'exam'
                   ? 'bg-rose-100 text-rose-500'
@@ -87,7 +87,7 @@ export default function SongsPage() {
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto px-6 py-8">
+        <div className="max-w-5xl 2xl:max-w-7xl mx-auto px-6 2xl:px-8 py-8">
           {/* Filter pills */}
           <div className="flex gap-3 mb-8">
             {[1, 2, 3].map((d) => (
@@ -101,13 +101,13 @@ export default function SongsPage() {
 
           {/* Grid */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3].map((i) => <div key={i} className="h-40 rounded-card bg-white animate-pulse shadow-sm" />)}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 2xl:gap-6">
+              {[1, 2, 3].map((i) => <div key={i} className="h-40 2xl:h-52 rounded-card bg-white animate-pulse shadow-sm" />)}
             </div>
           ) : songs.length === 0 ? (
             <div className="text-center py-20 text-text-muted"><p className="text-lg">暂无该级别曲目</p></div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 2xl:gap-6">
               {songs.map((song, i) => (
                 <div key={song.id}
                   className="rounded-card p-5 bg-white shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col"

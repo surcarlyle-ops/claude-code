@@ -298,7 +298,7 @@ export default function SingingPage() {
     const chars = line.text.split('')
     return (
       <div key={line.time} className={`py-1.5 text-center transition-all duration-500 ${isActive ? 'scale-105' : 'opacity-30'}`}>
-        <span className={`inline-block text-2xl font-bold tracking-wide ${isActive ? 'text-rose-400' : 'text-text-muted'}`}>
+        <span className={`inline-block text-responsive-2xl font-bold tracking-wide ${isActive ? 'text-rose-400' : 'text-text-muted'}`}>
           {chars.map((char, i) => (
             <span key={i} className="relative inline-block">
               {char}
@@ -357,7 +357,7 @@ export default function SingingPage() {
       {/* Main area - fills remaining space */}
       <div className="flex-1 flex flex-col min-h-0 px-6 py-4 gap-4">
         {/* Mountain wave progress bar */}
-        <div className="h-16 bg-white/50 rounded-card shadow-sm overflow-hidden flex-shrink-0">
+        <div className="h-16 2xl:h-[clamp(3rem,6vw,5rem)] bg-white/50 rounded-card shadow-sm overflow-hidden flex-shrink-0">
           <canvas ref={waveCanvasRef} className="w-full h-full" />
         </div>
 

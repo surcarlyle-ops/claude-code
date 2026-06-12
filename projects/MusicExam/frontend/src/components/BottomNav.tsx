@@ -14,7 +14,7 @@ export default function BottomNav() {
 
   return (
     <div className="border-t border-rose-100 bg-white/90 backdrop-blur-md shadow-sm">
-      <div className="max-w-4xl mx-auto flex items-center justify-around py-2">
+      <div className="max-w-5xl 2xl:max-w-7xl mx-auto flex items-center justify-around py-2">
         {NAV_ITEMS.map((item) => {
           const isActive = location.pathname === item.path
           const Icon = item.icon

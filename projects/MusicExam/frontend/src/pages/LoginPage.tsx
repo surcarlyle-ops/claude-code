@@ -120,8 +120,8 @@ export default function LoginPage() {
       </div>
 
       {/* Right panel — form */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
-        <div className="w-full max-w-sm">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 lg:px-12 py-10">
+        <div className="w-full max-w-sm 2xl:max-w-md">
           {/* Mobile header */}
           <div className="lg:hidden text-center mb-8">
             <div className="text-4xl mb-2">🎵</div>
@@ -129,8 +129,8 @@ export default function LoginPage() {
             <p className="font-handwriting text-text-muted text-lg">唱出你的最好成绩</p>
           </div>
 
-          <h2 className="text-xl font-bold text-text-main mb-2 text-center lg:text-left">同学你好！</h2>
-          <p className="text-sm text-text-muted mb-8 text-center lg:text-left">先完成身份验证，马上开始练习</p>
+          <h2 className="text-responsive-xl font-bold text-text-main mb-2 text-center lg:text-left">同学你好！</h2>
+          <p className="text-responsive-sm text-text-muted mb-8 text-center lg:text-left">先完成身份验证，马上开始练习</p>
 
           {/* Face verification — click to open modal */}
           <div className="flex flex-col items-center mb-6">

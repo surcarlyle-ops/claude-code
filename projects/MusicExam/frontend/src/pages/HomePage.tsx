@@ -74,10 +74,10 @@ export default function HomePage() {
           <div className="absolute bottom-60 left-10 text-blue-sky/20"><MusicNotes size={28} weight="fill" /></div>
         </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto px-6 py-8">
+        <div className="relative z-10 container-wide">
           {/* Welcome */}
           <div ref={welcomeRef} className="mb-8">
-            <h1 className="text-[32px] font-bold text-text-main mb-1">
+            <h1 className="text-responsive-3xl font-bold text-text-main mb-1">
               {studentName}，你好！
             </h1>
             <p className="text-text-muted flex items-center gap-2">
@@ -89,12 +89,12 @@ export default function HomePage() {
 
           {/* Practice + Exam cards */}
           <div className="mb-8">
-            <h2 className="text-lg font-bold text-text-main mb-1 flex items-center gap-2">
+            <h2 className="text-responsive-lg font-bold text-text-main mb-1 flex items-center gap-2">
               <Microphone size={22} className="text-rose-400" />
               开始练习
             </h2>
             <p className="text-text-muted text-sm mb-4">跟着歌词练唱，轻松上手</p>
-            <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-2 gap-4 2xl:gap-6">
               <button type="button" onClick={() => navigate('/songs', { state: { mode: 'practice' } })}
                 className="rounded-card bg-gradient-to-br from-rose-400 to-rose-500 p-6 text-left text-white shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
               >
@@ -103,7 +103,7 @@ export default function HomePage() {
                     <Microphone size={26} weight="fill" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold">开始练习</h3>
+                    <h3 className="text-responsive-lg font-bold">开始练习</h3>
                     <p className="text-white/70 text-sm">跟唱模式 · 歌词常驻</p>
                   </div>
                 </div>
@@ -121,7 +121,7 @@ export default function HomePage() {
                     <Target size={26} weight="fill" className="text-purple-500" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold">模拟考试</h3>
+                    <h3 className="text-responsive-lg font-bold">模拟考试</h3>
                     <p className="text-text-muted/70 text-sm">完整评分模式 · 隐藏歌词</p>
                   </div>
                 </div>
@@ -152,7 +152,7 @@ export default function HomePage() {
                       <p className="font-semibold text-text-main">{record.title}</p>
                       <p className="text-xs text-text-muted">{record.date} · {record.time}</p>
                     </div>
-                    <span className={`text-lg font-bold ${g.color}`}>{g.label}</span>
+                    <span className={`text-responsive-lg font-bold ${g.color}`}>{g.label}</span>
                   </div>
                 )
               })}

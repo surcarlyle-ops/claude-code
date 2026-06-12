@@ -37,13 +37,13 @@ export default function ResultPage() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
-      <div className="flex-1 max-w-4xl mx-auto w-full px-6 py-8">
+      <div className="flex-1 container-wide">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Grade card */}
           <div className="lg:col-span-1 space-y-4">
             <div className={`rounded-card bg-white border-2 ${bg} p-8 text-center shadow-sm`}>
               <p className="text-sm text-text-muted mb-1">总成绩</p>
-              <p className={`text-[64px] font-bold leading-none mb-2 ${color}`}>{grade}</p>
+              <p className={`text-responsive-4xl font-bold leading-none mb-2 ${color}`}>{grade}</p>
               <p className="font-handwriting text-xl text-text-muted">{label}</p>
             </div>
 
@@ -69,14 +69,14 @@ export default function ResultPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-card bg-gradient-to-br from-blue-sky to-blue-sky/70 p-6 text-center shadow-sm">
                 <p className="text-sm text-text-muted mb-2">🎯 音准</p>
-                <p className="text-[36px] font-bold text-text-main mb-3">{Math.round(result.pitch_score)}</p>
+                <p className="text-responsive-2xl font-bold text-text-main mb-3">{Math.round(result.pitch_score)}</p>
                 <div className="h-2.5 rounded-full bg-white/60 overflow-hidden">
                   <div className="h-full rounded-full bg-rose-300 transition-all duration-700" style={{ width: `${result.pitch_score}%` }} />
                 </div>
               </div>
               <div className="rounded-card bg-gradient-to-br from-mint to-mint/70 p-6 text-center shadow-sm">
                 <p className="text-sm text-text-muted mb-2">🥁 节奏</p>
-                <p className="text-[36px] font-bold text-text-main mb-3">{Math.round(result.rhythm_score)}</p>
+                <p className="text-responsive-2xl font-bold text-text-main mb-3">{Math.round(result.rhythm_score)}</p>
                 <div className="h-2.5 rounded-full bg-white/60 overflow-hidden">
                   <div className="h-full rounded-full bg-rose-400 transition-all duration-700" style={{ width: `${result.rhythm_score}%` }} />
                 </div>
