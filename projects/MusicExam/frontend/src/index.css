@@ -22,6 +22,14 @@
   --color-teal-mint: #80CBC4;
   --color-teal-bright: #4DB6AC;
 
+  /* 参考图直接使用的颜色 */
+  --color-ref-yellow: #F5E6A3;
+  --color-ref-pink: #F8D7E8;
+  --color-ref-blue: #BBDEFB;
+  --color-ref-green: #C8E6C9;
+  --color-ref-purple: #E1BEE7;
+  --color-ref-cream: #FFF8F0;
+
   /* 卡片背景色 */
   --color-card-pink: #FCE4EC;
   --color-card-yellow: #FFF9C4;
